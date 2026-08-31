@@ -88,14 +88,14 @@ export const Agenda: React.FC = () => {
     setClinicaId(id);
     const cli = clinicas.find((c) => c.id === id);
     if (cli) {
-      // Monta cidade com UF se houver
+      // Monta endereco completo: Rua, numero, bairro
       const cidadeUf = `${cli.cidade || ''}${cli.uf ? ' - ' + cli.uf : ''}`;
       setCidadeLocacao(cidadeUf.trim());
 
-      // Monta endereAÃƒâ€šÃ‚Â§o completo: Rua, NAÃƒâ€šÃ‚Âºmero, Bairro
+      // Monta endereco completo: Rua, numero, bairro
       const partesEndereco = [];
       if (cli.endereco) partesEndereco.push(cli.endereco);
-      if (cli.numero) partesEndereco.push(`NAÃƒâ€šÃ‚Âº ${cli.numero}`);
+      if (cli.numero) partesEndereco.push(`No. ${cli.numero}`);
       if (cli.bairro) partesEndereco.push(`Bairro: ${cli.bairro}`);
       if (cli.complemento) partesEndereco.push(`(${cli.complemento})`);
 
@@ -168,7 +168,7 @@ export const Agenda: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clinicaId) {
-      alert('Selecione uma clAÃƒâ€šÃ‚Â­nica.');
+      alert('Selecione uma clinica.');
       return;
     }
     if (itensLocacao.length === 0) {
@@ -244,7 +244,7 @@ export const Agenda: React.FC = () => {
         </Button>
       </div>
 
-      {/* Controles de MAÃƒâ€šÃ‚Âªs */}
+      {/* Controles de mes */}
       <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-100 px-6 py-4 shadow-sm">
         <div className="flex items-center gap-4">
           <button onClick={handlePrevMonth} className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600 transition-colors">
@@ -262,7 +262,7 @@ export const Agenda: React.FC = () => {
         </Button>
       </div>
 
-      {/* CalendAÃƒâ€šÃ‚Â¡rio Grid */}
+      {/* Calendario */}
       {loading ? (
         <div className="flex items-center justify-center p-20 bg-white rounded-3xl border border-slate-100">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
@@ -338,7 +338,7 @@ export const Agenda: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Agendamento / EdiAÃƒâ€šÃ‚Â§AÃƒâ€šÃ‚Â£o */}
+      {/* Modal de agendamento */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -355,7 +355,7 @@ export const Agenda: React.FC = () => {
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
                 required
               >
-                <option value="">Selecione uma clAÃƒâ€šÃ‚Â­nica...</option>
+                <option value="">Selecione uma clinica...</option>
                 {clinicas.map((cli) => (
                   <option key={cli.id} value={cli.id}>
                     {cli.razaoSocial} {cli.nomeFantasia ? `(${cli.nomeFantasia})` : ''}
@@ -417,7 +417,7 @@ export const Agenda: React.FC = () => {
                 onChange={(e) => setTecnicoId(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
               >
-                <option value="">Selecione o TAÃƒâ€šÃ‚Â©cnico...</option>
+                <option value="">Selecione o TECNICO...</option>
                 {tecnicos.map((tec) => (
                   <option key={tec.id} value={tec.id}>
                     {tec.nome}
@@ -436,7 +436,7 @@ export const Agenda: React.FC = () => {
                 onChange={(e) => setMotoristaId(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
               >
-                <option value="">Selecione o Motorista...</option>
+                <option value="">Selecione o TECNICO...</option>
                 {motoristas.map((mot) => (
                   <option key={mot.id} value={mot.id}>
                     {mot.nome}
@@ -506,7 +506,7 @@ export const Agenda: React.FC = () => {
                 <option value="AGENDADA">Agendada</option>
                 <option value="CONFIRMADA">Confirmada</option>
                 <option value="EM_ANDAMENTO">Em Andamento</option>
-                <option value="CONCLUIDA">ConcluAÃƒâ€šÃ‚Â­da</option>
+                <option value="CONCLUIDA">Concluida</option>
                 <option value="CANCELADA">Cancelada</option>
               </select>
             </div>
@@ -532,7 +532,7 @@ export const Agenda: React.FC = () => {
               </Button>
               {selectedLocacao && <Button type="button" variant="outline" onClick={imprimirProtocolo}>Imprimir protocolo / PDF</Button>}
               <Button type="submit">
-                {selectedLocacao ? 'Salvar AlteraAÃƒâ€šÃ‚Â§AÃƒâ€šÃ‚Âµes' : 'Concluir Agendamento'}
+                {selectedLocacao ? 'Salvar Alteracoes' : 'Concluir Agendamento'}
               </Button>
             </div>
           </div>
@@ -546,6 +546,8 @@ export const Agenda: React.FC = () => {
           <div className="protocol-box"><b>CLIENTE:</b> {selectedLocacao.clinica?.razaoSocial || selectedLocacao.clinica?.nomeFantasia || 'NAO INFORMADO'}<br/><b>ENDERECO:</b> {enderecoLocacao || 'NAO INFORMADO'}<br/><b>CIDADE/UF:</b> {cidadeLocacao || 'NAO INFORMADA'}</div>
           <table className="protocol-table"><thead><tr><th>APARELHO</th><th>LOCACAO</th><th>DISPAROS</th></tr></thead><tbody>{itensLocacao.map((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return <tr key={item.equipamentoId}><td>{eq?.descricao || 'EQUIPAMENTO'}</td><td>R$ {Number(item.valorDiaria || 0).toFixed(2)}</td><td>{tipos.map((tipo) => <div key={tipo}>{tipo}: R$ {Number(item.valoresDisparo?.[tipo] || 0).toFixed(2)}</div>)}</td></tr>; })}</tbody></table>
           <div className="protocol-box"><b>OCORRENCIAS:</b><br/><br/><br/></div>
+          <div className="protocol-box"><b>MATERIAIS CONFERIDOS:</b><br/>[ ] Oculos de protecao &nbsp;&nbsp; [ ] Cabo de energia &nbsp;&nbsp; [ ] Pedal &nbsp;&nbsp; [ ] Ponteiras e acessorios</div>
+          <div className="protocol-box"><b>CONTROLE DE DISPAROS:</b><br/>Leitura inicial: ____________________ &nbsp;&nbsp; Leitura final: ____________________ &nbsp;&nbsp; Diferenca: ____________________</div>
           <div className="protocol-total">DESCONTO: R$ {Number(valorDesconto || 0).toFixed(2)}<b>TOTAL DA LOCACAO: R$ {Number(itensLocacao.reduce((sum, item) => sum + Number(item.valorDiaria || 0), 0) - Number(valorDesconto || 0)).toFixed(2)}</b></div>
           <p className="protocol-sign">Declaro que recebi e conferi o equipamento e materiais assinalados.</p>
           <div className="protocol-lines">Motorista: ________________________________<br/><br/>Tecnico: __________________________________<br/><br/>Locataria: _________________________________</div>
