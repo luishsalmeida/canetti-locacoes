@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "postinstall": "npm --prefix backend install --ignore-scripts && npm --prefix frontend install --ignore-scripts",
-    "build": "npm --prefix frontend run build && npm --prefix backend run build && npm --prefix backend exec prisma generate",
+    "build": "npm --prefix frontend install --ignore-scripts && npm --prefix backend install --ignore-scripts && npm --prefix frontend run build && npm --prefix backend run build && npm --prefix backend exec prisma generate",
     "start": "npm --prefix backend exec prisma db push && npm --prefix backend start"
   }
 }
