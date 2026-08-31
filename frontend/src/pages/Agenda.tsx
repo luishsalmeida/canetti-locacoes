@@ -235,7 +235,7 @@ export const Agenda: React.FC = () => {
             <CalendarIcon className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Agenda de LocaÃ§Ãµes</h2>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Agenda de Loca&ccedil;&otilde;es</h2>
             <p className="text-sm font-medium text-slate-500">Gerenciamento diÃ¡rio de equipamentos e compromissos</p>
           </div>
         </div>
@@ -348,7 +348,7 @@ export const Agenda: React.FC = () => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">ClÃ­nica / Cliente *</label>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Cl&iacute;nica / Cliente *</label>
               <select
                 value={clinicaId}
                 onChange={(e) => handleClinicaChange(e.target.value)}
@@ -365,7 +365,7 @@ export const Agenda: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Data da LocaÃ§Ã£o *</label>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Data da Loca&ccedil;&atilde;o *</label>
               <input
                 type="date"
                 value={dataInicio}
@@ -378,13 +378,13 @@ export const Agenda: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="HorÃ¡rio InÃ­cio"
+                label="Hor&aacute;rio In&iacute;cio"
               type="time"
               value={horaInicio}
               onChange={(e) => setHoraInicio(e.target.value)}
             />
             <Input
-              label="HorÃ¡rio TÃ©rmino"
+                label="Hor&aacute;rio T&eacute;rmino"
               type="time"
               value={horaFim}
               onChange={(e) => setHoraFim(e.target.value)}
@@ -393,7 +393,7 @@ export const Agenda: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="EndereÃ§o da LocaÃ§Ã£o (Rua, NÃºmero, Bairro)"
+              label="Endere&ccedil;o da Loca&ccedil;&atilde;o (Rua, N&uacute;mero, Bairro)"
               value={enderecoLocacao}
               onChange={(e) => setEnderecoLocacao(e.target.value)}
               placeholder="Rua, nÂº, bairro..."
@@ -410,7 +410,7 @@ export const Agenda: React.FC = () => {
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
                 <Shield className="w-3.5 h-3.5 text-purple-600" />
-                TÃ©cnico ResponsÃ¡vel
+                T&eacute;cnico Respons&aacute;vel
               </label>
               <select
                 value={tecnicoId}
@@ -429,7 +429,7 @@ export const Agenda: React.FC = () => {
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
                 <Truck className="w-3.5 h-3.5 text-blue-600" />
-                Motorista ResponsÃ¡vel
+                Motorista Respons&aacute;vel
               </label>
               <select
                 value={motoristaId}
@@ -447,7 +447,7 @@ export const Agenda: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-2 border-t border-slate-100 pt-4">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Aparelhos e Valores da DiÃ¡ria *</label>
+            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Aparelhos e Valores da Di&aacute;ria *</label>
             <div className="max-h-56 overflow-y-auto border border-slate-300 rounded-2xl p-3 flex flex-col gap-2.5 bg-slate-50">
               {equipamentos.length === 0 ? (
                 <div className="text-center py-4 text-slate-400 text-xs font-semibold">
