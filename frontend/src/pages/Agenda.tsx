@@ -7,7 +7,7 @@ import { Input } from '../components/Input';
 import { ChevronLeft, ChevronRight, Plus, Clock, Shield, Truck, Calendar as CalendarIcon } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import protocoloLogo from '../assets/canetti-logo-protocolo.png';
+import protocoloLogo from '../assets/canetti-logo-transparent.png';
 
 interface ItemAgendamento {
   equipamentoId: number;
