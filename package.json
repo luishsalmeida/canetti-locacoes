@@ -3,8 +3,8 @@
   "version": "2.0.0",
   "private": true,
   "scripts": {
-    "postinstall": "cd backend && npm install && cd ../frontend && npm install",
-    "build": "cd frontend && npm run build && cd ../backend && npm run build && npx prisma generate --schema=prisma/schema.prisma",
-    "start": "cd backend && npx prisma db push && npm start"
+    "postinstall": "npm --prefix backend install --ignore-scripts && npm --prefix frontend install --ignore-scripts",
+    "build": "npm --prefix frontend run build && npm --prefix backend run build && npm --prefix backend exec prisma generate",
+    "start": "npm --prefix backend exec prisma db push && npm --prefix backend start"
   }
 }
