@@ -94,6 +94,7 @@ export async function createLocacao(data: LocacaoInput, usuarioId?: number) {
       data: itensParaCriar.map((item) => ({
         ...item,
         locacaoId: locacao.id,
+        valoresDisparo: (data.itens.find((i: any) => i.equipamentoId === item.equipamentoId) as any)?.valoresDisparo || undefined,
       })),
     });
 
@@ -185,6 +186,7 @@ export async function updateLocacao(id: number, data: Partial<LocacaoInput>) {
           valorDiaria: vDiaria,
           quantidade: 1,
           valorTotal: vDiaria,
+          valoresDisparo: (item as any).valoresDisparo || undefined,
         };
       });
       await tx.itemLocacao.createMany({ data: novosItens });
