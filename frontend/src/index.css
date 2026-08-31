@@ -9,8 +9,8 @@
   .print-protocol, .print-protocol * { visibility: visible !important; }
   .print-protocol { display:block; position:absolute; inset:0; box-sizing:border-box; overflow:hidden; padding:0; color:#111; font:7.5pt Arial,sans-serif; line-height:1.22; }
   .print-protocol h1 { text-align:center; font-size:13pt; margin:3mm 0 2mm; border-bottom:1.5px solid #111; padding-bottom:2mm; }
-  .protocol-header { display:flex; align-items:center; justify-content:space-between; border-bottom:1.5px solid #111; padding-bottom:2mm; }
-  .protocol-header img { width:52mm; height:auto; max-height:19mm; object-fit:contain; object-position:left center; }
+  .protocol-header { display:flex; align-items:center; justify-content:space-between; min-height:13mm; background:#fff; border-bottom:1.5px solid #111; padding:1mm 0 2mm; }
+  .protocol-header img { width:32mm; height:auto; max-height:12mm; object-fit:contain; object-position:left center; background:#fff; }
   .protocol-header span { text-align:right; font-size:7pt; }
   .protocol-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:0; border:1px solid #111; padding:0; margin:2mm 0; }
   .protocol-grid span { padding:1.5mm; border-right:1px solid #111; } .protocol-grid span:last-child { border-right:0; }
