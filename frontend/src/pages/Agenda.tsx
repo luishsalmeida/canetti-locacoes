@@ -18,6 +18,7 @@ const TIPOS_DISPARO: Record<string, string[]> = {
   harmony: ['Disparo Normal', 'Disparo Pixel'],
   m22: ['Disparo Normal'],
   ultraformer: ['Disparo Normal'],
+  'ultraformer iii': ['Disparo Normal'],
   'liftera 2': ['Disparo Linear', 'Disparo Caneta'],
 };
 
