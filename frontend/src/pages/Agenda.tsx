@@ -92,10 +92,10 @@ export const Agenda: React.FC = () => {
       const cidadeUf = `${cli.cidade || ''}${cli.uf ? ' - ' + cli.uf : ''}`;
       setCidadeLocacao(cidadeUf.trim());
 
-      // Monta endereAÃ‚Â§o completo: Rua, NAÃ‚Âºmero, Bairro
+      // Monta endereAÃƒâ€šÃ‚Â§o completo: Rua, NAÃƒâ€šÃ‚Âºmero, Bairro
       const partesEndereco = [];
       if (cli.endereco) partesEndereco.push(cli.endereco);
-      if (cli.numero) partesEndereco.push(`NAÃ‚Âº ${cli.numero}`);
+      if (cli.numero) partesEndereco.push(`NAÃƒâ€šÃ‚Âº ${cli.numero}`);
       if (cli.bairro) partesEndereco.push(`Bairro: ${cli.bairro}`);
       if (cli.complemento) partesEndereco.push(`(${cli.complemento})`);
 
@@ -168,7 +168,7 @@ export const Agenda: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clinicaId) {
-      alert('Selecione uma clAÃ‚Â­nica.');
+      alert('Selecione uma clAÃƒâ€šÃ‚Â­nica.');
       return;
     }
     if (itensLocacao.length === 0) {
@@ -236,7 +236,7 @@ export const Agenda: React.FC = () => {
           </div>
           <div>
             <h2 className="text-2xl font-black text-slate-800 tracking-tight">Agenda de Loca&ccedil;&otilde;es</h2>
-            <p className="text-sm font-medium text-slate-500">Gerenciamento diAÃ‚Â¡rio de equipamentos e compromissos</p>
+            <p className="text-sm font-medium text-slate-500">Gerenciamento diario de equipamentos e compromissos</p>
           </div>
         </div>
         <Button onClick={() => handleOpenCreate()} leftIcon={<Plus className="w-4 h-4" />}>
@@ -244,7 +244,7 @@ export const Agenda: React.FC = () => {
         </Button>
       </div>
 
-      {/* Controles de MAÃ‚Âªs */}
+      {/* Controles de MAÃƒâ€šÃ‚Âªs */}
       <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-100 px-6 py-4 shadow-sm">
         <div className="flex items-center gap-4">
           <button onClick={handlePrevMonth} className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600 transition-colors">
@@ -262,7 +262,7 @@ export const Agenda: React.FC = () => {
         </Button>
       </div>
 
-      {/* CalendAÃ‚Â¡rio Grid */}
+      {/* CalendAÃƒâ€šÃ‚Â¡rio Grid */}
       {loading ? (
         <div className="flex items-center justify-center p-20 bg-white rounded-3xl border border-slate-100">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
@@ -300,8 +300,8 @@ export const Agenda: React.FC = () => {
 
                 <div className="flex flex-col gap-2 overflow-y-auto max-h-[240px]">
                   {locacoesDoDia.map((loc) => {
-                    const nomeClinica = loc.clinica ? (loc.clinica.nomeFantasia || loc.clinica.razaoSocial) : 'ClAÃ‚Â­nica';
-                    const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nAÃ‚Â£o informada';
+                    const nomeClinica = loc.clinica ? (loc.clinica.nomeFantasia || loc.clinica.razaoSocial) : 'Clinica';
+                    const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nao informada';
                     const equipamentosStr = loc.itens && loc.itens.map((i) => i.equipamento?.descricao).filter(Boolean).join(', ') || 'Nenhum aparelho';
                     const tecnicoNome = loc.tecnico?.nome;
                     const motoristaNome = loc.motorista?.nome;
@@ -321,7 +321,7 @@ export const Agenda: React.FC = () => {
                         <div className="text-[11px] font-black text-indigo-600 truncate bg-white px-2 py-1 rounded-lg border border-indigo-100/50 mt-0.5" title={equipamentosStr}>
                           {equipamentosStr}
                         </div>
-                        {tecnicoNome && <div className="text-[11px] text-slate-600 truncate">TAÃ‚Â©cnico: {tecnicoNome}</div>}
+                        {tecnicoNome && <div className="text-[11px] text-slate-600 truncate">TECNICO: {tecnicoNome}</div>}
                         {motoristaNome && <div className="text-[11px] text-slate-600 truncate">Motorista: {motoristaNome}</div>}
                       </div>
                     );
@@ -338,7 +338,7 @@ export const Agenda: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Agendamento / EdiAÃ‚Â§AÃ‚Â£o */}
+      {/* Modal Agendamento / EdiAÃƒâ€šÃ‚Â§AÃƒâ€šÃ‚Â£o */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -355,7 +355,7 @@ export const Agenda: React.FC = () => {
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
                 required
               >
-                <option value="">Selecione uma clAÃ‚Â­nica...</option>
+                <option value="">Selecione uma clAÃƒâ€šÃ‚Â­nica...</option>
                 {clinicas.map((cli) => (
                   <option key={cli.id} value={cli.id}>
                     {cli.razaoSocial} {cli.nomeFantasia ? `(${cli.nomeFantasia})` : ''}
@@ -396,7 +396,7 @@ export const Agenda: React.FC = () => {
               label="Endere&ccedil;o da Loca&ccedil;&atilde;o (Rua, N&uacute;mero, Bairro)"
               value={enderecoLocacao}
               onChange={(e) => setEnderecoLocacao(e.target.value)}
-              placeholder="Rua, nAÃ‚Âº, bairro..."
+              placeholder="Rua, numero, bairro..."
             />
             <Input
               label="Cidade / UF"
@@ -417,7 +417,7 @@ export const Agenda: React.FC = () => {
                 onChange={(e) => setTecnicoId(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
               >
-                <option value="">Selecione o TAÃ‚Â©cnico...</option>
+                <option value="">Selecione o TAÃƒâ€šÃ‚Â©cnico...</option>
                 {tecnicos.map((tec) => (
                   <option key={tec.id} value={tec.id}>
                     {tec.nome}
@@ -506,7 +506,7 @@ export const Agenda: React.FC = () => {
                 <option value="AGENDADA">Agendada</option>
                 <option value="CONFIRMADA">Confirmada</option>
                 <option value="EM_ANDAMENTO">Em Andamento</option>
-                <option value="CONCLUIDA">ConcluAÃ‚Â­da</option>
+                <option value="CONCLUIDA">ConcluAÃƒâ€šÃ‚Â­da</option>
                 <option value="CANCELADA">Cancelada</option>
               </select>
             </div>
@@ -532,7 +532,7 @@ export const Agenda: React.FC = () => {
               </Button>
               {selectedLocacao && <Button type="button" variant="outline" onClick={imprimirProtocolo}>Imprimir protocolo / PDF</Button>}
               <Button type="submit">
-                {selectedLocacao ? 'Salvar AlteraAÃ‚Â§AÃ‚Âµes' : 'Concluir Agendamento'}
+                {selectedLocacao ? 'Salvar AlteraAÃƒâ€šÃ‚Â§AÃƒâ€šÃ‚Âµes' : 'Concluir Agendamento'}
               </Button>
             </div>
           </div>
