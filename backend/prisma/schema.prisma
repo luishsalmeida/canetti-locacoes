@@ -153,6 +153,7 @@ model ItemLocacao {
   quantidade      Int         @default(1)
   valorTotal      Float       @map("valor_total")
   observacoes     String?
+  valoresDisparo  Json?       @map("valores_disparo")
 
   locacao         Locacao     @relation(fields: [locacaoId], references: [id], onDelete: Cascade)
   equipamento     Equipamento @relation(fields: [equipamentoId], references: [id])
