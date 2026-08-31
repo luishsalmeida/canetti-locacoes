@@ -92,10 +92,10 @@ export const Agenda: React.FC = () => {
       const cidadeUf = `${cli.cidade || ''}${cli.uf ? ' - ' + cli.uf : ''}`;
       setCidadeLocacao(cidadeUf.trim());
 
-      // Monta endereço completo: Rua, Número, Bairro
+      // Monta endereÃ§o completo: Rua, NÃºmero, Bairro
       const partesEndereco = [];
       if (cli.endereco) partesEndereco.push(cli.endereco);
-      if (cli.numero) partesEndereco.push(`Nº ${cli.numero}`);
+      if (cli.numero) partesEndereco.push(`NÂº ${cli.numero}`);
       if (cli.bairro) partesEndereco.push(`Bairro: ${cli.bairro}`);
       if (cli.complemento) partesEndereco.push(`(${cli.complemento})`);
 
@@ -168,7 +168,7 @@ export const Agenda: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clinicaId) {
-      alert('Selecione uma clínica.');
+      alert('Selecione uma clÃ­nica.');
       return;
     }
     if (itensLocacao.length === 0) {
@@ -205,6 +205,8 @@ export const Agenda: React.FC = () => {
     }
   };
 
+  const imprimirProtocolo = () => window.setTimeout(() => window.print(), 50);
+
   const handleDelete = async (id: number) => {
     if (confirm('Deseja realmente cancelar/deletar este agendamento?')) {
       try {
@@ -233,8 +235,8 @@ export const Agenda: React.FC = () => {
             <CalendarIcon className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Agenda de Locações</h2>
-            <p className="text-sm font-medium text-slate-500">Gerenciamento diário de equipamentos e compromissos</p>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Agenda de LocaÃ§Ãµes</h2>
+            <p className="text-sm font-medium text-slate-500">Gerenciamento diÃ¡rio de equipamentos e compromissos</p>
           </div>
         </div>
         <Button onClick={() => handleOpenCreate()} leftIcon={<Plus className="w-4 h-4" />}>
@@ -242,7 +244,7 @@ export const Agenda: React.FC = () => {
         </Button>
       </div>
 
-      {/* Controles de Mês */}
+      {/* Controles de MÃªs */}
       <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-100 px-6 py-4 shadow-sm">
         <div className="flex items-center gap-4">
           <button onClick={handlePrevMonth} className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600 transition-colors">
@@ -260,7 +262,7 @@ export const Agenda: React.FC = () => {
         </Button>
       </div>
 
-      {/* Calendário Grid */}
+      {/* CalendÃ¡rio Grid */}
       {loading ? (
         <div className="flex items-center justify-center p-20 bg-white rounded-3xl border border-slate-100">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
@@ -298,8 +300,8 @@ export const Agenda: React.FC = () => {
 
                 <div className="flex flex-col gap-2 overflow-y-auto max-h-[240px]">
                   {locacoesDoDia.map((loc) => {
-                    const nomeClinica = loc.clinica ? (loc.clinica.nomeFantasia || loc.clinica.razaoSocial) : 'Clínica';
-                    const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade não informada';
+                    const nomeClinica = loc.clinica ? (loc.clinica.nomeFantasia || loc.clinica.razaoSocial) : 'ClÃ­nica';
+                    const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nÃ£o informada';
                     const equipamentosStr = loc.itens && loc.itens.map((i) => i.equipamento?.descricao).filter(Boolean).join(', ') || 'Nenhum aparelho';
                     const tecnicoNome = loc.tecnico?.nome;
                     const motoristaNome = loc.motorista?.nome;
@@ -319,7 +321,7 @@ export const Agenda: React.FC = () => {
                         <div className="text-[11px] font-black text-indigo-600 truncate bg-white px-2 py-1 rounded-lg border border-indigo-100/50 mt-0.5" title={equipamentosStr}>
                           {equipamentosStr}
                         </div>
-                        {tecnicoNome && <div className="text-[11px] text-slate-600 truncate">Técnico: {tecnicoNome}</div>}
+                        {tecnicoNome && <div className="text-[11px] text-slate-600 truncate">TÃ©cnico: {tecnicoNome}</div>}
                         {motoristaNome && <div className="text-[11px] text-slate-600 truncate">Motorista: {motoristaNome}</div>}
                       </div>
                     );
@@ -336,7 +338,7 @@ export const Agenda: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Agendamento / Edição */}
+      {/* Modal Agendamento / EdiÃ§Ã£o */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -346,14 +348,14 @@ export const Agenda: React.FC = () => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Clínica / Cliente *</label>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">ClÃ­nica / Cliente *</label>
               <select
                 value={clinicaId}
                 onChange={(e) => handleClinicaChange(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
                 required
               >
-                <option value="">Selecione uma clínica...</option>
+                <option value="">Selecione uma clÃ­nica...</option>
                 {clinicas.map((cli) => (
                   <option key={cli.id} value={cli.id}>
                     {cli.razaoSocial} {cli.nomeFantasia ? `(${cli.nomeFantasia})` : ''}
@@ -363,7 +365,7 @@ export const Agenda: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Data da Locação *</label>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Data da LocaÃ§Ã£o *</label>
               <input
                 type="date"
                 value={dataInicio}
@@ -376,13 +378,13 @@ export const Agenda: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Horário Início"
+              label="HorÃ¡rio InÃ­cio"
               type="time"
               value={horaInicio}
               onChange={(e) => setHoraInicio(e.target.value)}
             />
             <Input
-              label="Horário Término"
+              label="HorÃ¡rio TÃ©rmino"
               type="time"
               value={horaFim}
               onChange={(e) => setHoraFim(e.target.value)}
@@ -391,10 +393,10 @@ export const Agenda: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Endereço da Locação (Rua, Número, Bairro)"
+              label="EndereÃ§o da LocaÃ§Ã£o (Rua, NÃºmero, Bairro)"
               value={enderecoLocacao}
               onChange={(e) => setEnderecoLocacao(e.target.value)}
-              placeholder="Rua, nº, bairro..."
+              placeholder="Rua, nÂº, bairro..."
             />
             <Input
               label="Cidade / UF"
@@ -408,14 +410,14 @@ export const Agenda: React.FC = () => {
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
                 <Shield className="w-3.5 h-3.5 text-purple-600" />
-                Técnico Responsável
+                TÃ©cnico ResponsÃ¡vel
               </label>
               <select
                 value={tecnicoId}
                 onChange={(e) => setTecnicoId(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
               >
-                <option value="">Selecione o Técnico...</option>
+                <option value="">Selecione o TÃ©cnico...</option>
                 {tecnicos.map((tec) => (
                   <option key={tec.id} value={tec.id}>
                     {tec.nome}
@@ -427,7 +429,7 @@ export const Agenda: React.FC = () => {
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
                 <Truck className="w-3.5 h-3.5 text-blue-600" />
-                Motorista Responsável
+                Motorista ResponsÃ¡vel
               </label>
               <select
                 value={motoristaId}
@@ -445,7 +447,7 @@ export const Agenda: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-2 border-t border-slate-100 pt-4">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Aparelhos e Valores da Diária *</label>
+            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Aparelhos e Valores da DiÃ¡ria *</label>
             <div className="max-h-56 overflow-y-auto border border-slate-300 rounded-2xl p-3 flex flex-col gap-2.5 bg-slate-50">
               {equipamentos.length === 0 ? (
                 <div className="text-center py-4 text-slate-400 text-xs font-semibold">
@@ -504,7 +506,7 @@ export const Agenda: React.FC = () => {
                 <option value="AGENDADA">Agendada</option>
                 <option value="CONFIRMADA">Confirmada</option>
                 <option value="EM_ANDAMENTO">Em Andamento</option>
-                <option value="CONCLUIDA">Concluída</option>
+                <option value="CONCLUIDA">ConcluÃ­da</option>
                 <option value="CANCELADA">Cancelada</option>
               </select>
             </div>
@@ -528,13 +530,34 @@ export const Agenda: React.FC = () => {
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
                 Cancelar
               </Button>
+              {selectedLocacao && <Button type="button" variant="outline" onClick={imprimirProtocolo}>Imprimir protocolo / PDF</Button>}
               <Button type="submit">
-                {selectedLocacao ? 'Salvar Alterações' : 'Concluir Agendamento'}
+                {selectedLocacao ? 'Salvar AlteraÃ§Ãµes' : 'Concluir Agendamento'}
               </Button>
             </div>
           </div>
         </form>
       </Modal>
+      {selectedLocacao && (
+        <section className="print-protocol" aria-hidden="true">
+          <h1>CANETTI LOCAÃ‡Ã•ES â€” PROTOCOLO DE ENTREGA</h1>
+          <p><strong>NÃºmero:</strong> {String(selectedLocacao.codigo || selectedLocacao.id).padStart(8, '0')} &nbsp; <strong>Data:</strong> {dataInicio}</p>
+          <h2>Cliente</h2>
+          <p><strong>{selectedLocacao.clinica?.razaoSocial || selectedLocacao.clinica?.nomeFantasia || 'NÃ£o informado'}</strong><br />
+            EndereÃ§o: {enderecoLocacao || 'NÃ£o informado'} â€” {cidadeLocacao || 'Cidade nÃ£o informada'}</p>
+          <p>Entrega: {horaInicio} &nbsp;&nbsp; Retirada: {horaFim}</p>
+          <h2>Equipamentos e valores</h2>
+          {itensLocacao.map((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return (
+            <div key={item.equipamentoId} className="protocol-item"><strong>{eq?.descricao || `Equipamento ${item.equipamentoId}`}</strong> â€” DiÃ¡ria: R$ {Number(item.valorDiaria || 0).toFixed(2)}
+              {tipos.length > 0 && <div>Disparos: {tipos.map((tipo) => `${tipo}: R$ ${Number(item.valoresDisparo?.[tipo] || 0).toFixed(2)}`).join(' | ')}</div>}
+            </div>;
+          })}
+          <p><strong>TÃ©cnico:</strong> {selectedLocacao.tecnico?.nome || 'NÃ£o informado'} &nbsp; <strong>Motorista:</strong> {selectedLocacao.motorista?.nome || 'NÃ£o informado'}</p>
+          <p className="protocol-sign">Declaro que recebi e conferi os equipamentos e materiais assinalados.</p>
+          <div className="protocol-lines">Motorista: ____________________________________<br /><br />LocatÃ¡ria: ____________________________________</div>
+        </section>
+      )}
     </div>
   );
 };
+
