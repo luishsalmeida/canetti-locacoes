@@ -550,7 +550,7 @@ export const Agenda: React.FC = () => {
           {itensLocacao.map((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return (
             <div key={item.equipamentoId} className="protocol-item"><strong>{eq?.descricao || `Equipamento ${item.equipamentoId}`}</strong> â€” DiÃ¡ria: R$ {Number(item.valorDiaria || 0).toFixed(2)}
               {tipos.length > 0 && <div>Disparos: {tipos.map((tipo) => `${tipo}: R$ ${Number(item.valoresDisparo?.[tipo] || 0).toFixed(2)}`).join(' | ')}</div>}
-            </div>;
+            </div>);
           })}
           <p><strong>TÃ©cnico:</strong> {selectedLocacao.tecnico?.nome || 'NÃ£o informado'} &nbsp; <strong>Motorista:</strong> {selectedLocacao.motorista?.nome || 'NÃ£o informado'}</p>
           <p className="protocol-sign">Declaro que recebi e conferi os equipamentos e materiais assinalados.</p>
