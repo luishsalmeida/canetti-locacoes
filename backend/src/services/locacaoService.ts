@@ -84,6 +84,8 @@ export async function createLocacao(data: LocacaoInput, usuarioId?: number) {
         valorFinal: valorFinal,
         status: data.status,
         observacoes: data.observacoes || null,
+        tecnicoId: data.tecnicoId ? Number(data.tecnicoId) : null,
+        motoristaId: data.motoristaId ? Number(data.motoristaId) : null,
         criadoPorId: usuarioId || null,
       },
     });
@@ -121,6 +123,8 @@ export async function getLocacoes(filtros: { dataInicio?: string; dataFim?: stri
     where,
     include: {
       clinica: true,
+      tecnico: true,
+      motorista: true,
       criadoPor: true,
       itens: {
         include: {
@@ -137,6 +141,8 @@ export async function getLocacaoById(id: number) {
     where: { id },
     include: {
       clinica: true,
+      tecnico: true,
+      motorista: true,
       itens: {
         include: {
           equipamento: true,
@@ -163,6 +169,8 @@ export async function updateLocacao(id: number, data: Partial<LocacaoInput>) {
   if (data.valorDesconto !== undefined) updateData.valorDesconto = data.valorDesconto;
   if (data.observacoes !== undefined) updateData.observacoes = data.observacoes;
   if (data.status !== undefined) updateData.status = data.status;
+  if (data.tecnicoId !== undefined) updateData.tecnicoId = data.tecnicoId ? Number(data.tecnicoId) : null;
+  if (data.motoristaId !== undefined) updateData.motoristaId = data.motoristaId ? Number(data.motoristaId) : null;
 
   return await prisma.$transaction(async (tx) => {
     let valorTotal = new Decimal(0);
