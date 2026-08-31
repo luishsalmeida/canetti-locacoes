@@ -11,7 +11,19 @@ import { ptBR } from 'date-fns/locale';
 interface ItemAgendamento {
   equipamentoId: number;
   valorDiaria: number;
+  valoresDisparo?: Record<string, number>;
 }
+
+const TIPOS_DISPARO: Record<string, string[]> = {
+  harmony: ['Disparo Normal', 'Disparo Pixel'],
+  m22: ['Disparo Normal'],
+  ultraformer: ['Disparo Normal'],
+  'liftera 2': ['Disparo Linear', 'Disparo Caneta'],
+};
+
+const tiposDisparoDoEquipamento = (eq: Equipamento) => eq.tiposDisparo?.length
+  ? eq.tiposDisparo
+  : TIPOS_DISPARO[(eq.descricao || '').trim().toLowerCase()] || [];
 
 export const Agenda: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -121,6 +133,7 @@ export const Agenda: React.FC = () => {
       (loc.itens || []).map((i) => ({
         equipamentoId: i.equipamentoId,
         valorDiaria: Number(i.valorDiaria || 0),
+        valoresDisparo: i.valoresDisparo || {},
       }))
     );
     setValorDesconto(loc.valorDesconto || 0);
@@ -133,10 +146,16 @@ export const Agenda: React.FC = () => {
     if (checked) {
       const eq = equipamentos.find(e => e.id === equipamentoId);
       const valorSugerido = eq ? (eq.valorDiaria || 0) : 0;
-      setItensLocacao([...itensLocacao, { equipamentoId, valorDiaria: valorSugerido }]);
+      setItensLocacao([...itensLocacao, { equipamentoId, valorDiaria: valorSugerido, valoresDisparo: {} }]);
     } else {
       setItensLocacao(itensLocacao.filter((i) => i.equipamentoId !== equipamentoId));
     }
+  };
+
+  const handleValorDisparoChange = (equipamentoId: number, tipo: string, valor: number) => {
+    setItensLocacao(itensLocacao.map((item) => item.equipamentoId === equipamentoId
+      ? { ...item, valoresDisparo: { ...(item.valoresDisparo || {}), [tipo]: valor } }
+      : item));
   };
 
   const handleValorItemChange = (equipamentoId: number, valor: number) => {
@@ -449,7 +468,7 @@ export const Agenda: React.FC = () => {
                       </label>
 
                       {checked && (
-                        <div className="w-40">
+                        <div className="flex flex-col gap-2 w-52">
                           <Input
                             label=""
                             placeholder="Valor R$"
@@ -459,6 +478,11 @@ export const Agenda: React.FC = () => {
                             onChange={(e) => handleValorItemChange(eq.id, Number(e.target.value))}
                             required
                           />
+                          {tiposDisparoDoEquipamento(eq).map((tipo) => (
+                            <Input key={tipo} label="" placeholder={`${tipo} R$`} type="number" step="0.01"
+                              value={itemEncontrado.valoresDisparo?.[tipo] ?? ''}
+                              onChange={(e) => handleValorDisparoChange(eq.id, tipo, Number(e.target.value))} />
+                          ))}
                         </div>
                       )}
                     </div>
