@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: canetti-locacoes
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3333
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: canetti-db
+          property: connectionString
+
+databases:
+  - name: canetti-db
+    databaseName: canetti
+    user: canetti_user
+    plan: free
