@@ -7,6 +7,7 @@ import { Input } from '../components/Input';
 import { ChevronLeft, ChevronRight, Plus, Clock, Shield, Truck, Calendar as CalendarIcon } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import protocoloLogo from '../assets/canetti-logo-protocolo.png';
 
 interface ItemAgendamento {
   equipamentoId: number;
@@ -540,7 +541,7 @@ export const Agenda: React.FC = () => {
       </Modal>
       {selectedLocacao && (
         <section className="print-protocol" aria-hidden="true">
-          <header className="protocol-header"><b>CANETTI LOCACOES</b><span>Rua Angelo Cisotto, 86 - Cerquilho/SP<br/>Fones: (015) 3284-4278 / 3384-3630</span></header>
+          <header className="protocol-header"><img src={protocoloLogo} alt="Canetti"/><span>Rua Angelo Cisotto, 86 - Cerquilho/SP<br/>Fones: (015) 3284-4278 / 3384-3630</span></header>
           <h1>PROTOCOLO DE ENTREGA E RETIRADA</h1>
           <div className="protocol-grid"><span>NUMERO: {String(selectedLocacao.codigo || selectedLocacao.id).padStart(8, '0')}</span><span>DATA: {dataInicio}</span><span>ENTREGA: {horaInicio}</span><span>RETIRADA: {horaFim}</span></div>
           <div className="protocol-box"><b>CLIENTE:</b> {selectedLocacao.clinica?.razaoSocial || selectedLocacao.clinica?.nomeFantasia || 'NAO INFORMADO'}<br/><b>ENDERECO:</b> {enderecoLocacao || 'NAO INFORMADO'}<br/><b>CIDADE/UF:</b> {cidadeLocacao || 'NAO INFORMADA'}</div>
@@ -549,8 +550,9 @@ export const Agenda: React.FC = () => {
           <div className="protocol-box"><b>MATERIAIS CONFERIDOS:</b><br/>[ ] Oculos de protecao &nbsp;&nbsp; [ ] Cabo de energia &nbsp;&nbsp; [ ] Pedal &nbsp;&nbsp; [ ] Ponteiras e acessorios</div>
           <div className="protocol-box"><b>CONTROLE DE DISPAROS:</b><br/>Leitura inicial: ____________________ &nbsp;&nbsp; Leitura final: ____________________ &nbsp;&nbsp; Diferenca: ____________________</div>
           <div className="protocol-total">DESCONTO: R$ {Number(valorDesconto || 0).toFixed(2)}<b>TOTAL DA LOCACAO: R$ {Number(itensLocacao.reduce((sum, item) => sum + Number(item.valorDiaria || 0), 0) - Number(valorDesconto || 0)).toFixed(2)}</b></div>
+          <div className="protocol-payment"><b>FORMA DE PAGAMENTO:</b> [ ] PIX &nbsp;&nbsp; [ ] DINHEIRO &nbsp;&nbsp; [ ] CHEQUE</div>
           <p className="protocol-sign">Declaro que recebi e conferi o equipamento e materiais assinalados.</p>
-          <div className="protocol-lines">Motorista: ________________________________<br/><br/>Tecnico: __________________________________<br/><br/>Locataria: _________________________________</div>
+          <div className="protocol-lines">Motorista: ________________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Locataria: _________________________________</div>
         </section>
       )}    </div>
   );
