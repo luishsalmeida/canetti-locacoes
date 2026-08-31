@@ -92,10 +92,10 @@ export const Agenda: React.FC = () => {
       const cidadeUf = `${cli.cidade || ''}${cli.uf ? ' - ' + cli.uf : ''}`;
       setCidadeLocacao(cidadeUf.trim());
 
-      // Monta endereAÂ§o completo: Rua, NAÂºmero, Bairro
+      // Monta endereAÃ‚Â§o completo: Rua, NAÃ‚Âºmero, Bairro
       const partesEndereco = [];
       if (cli.endereco) partesEndereco.push(cli.endereco);
-      if (cli.numero) partesEndereco.push(`NAÂº ${cli.numero}`);
+      if (cli.numero) partesEndereco.push(`NAÃ‚Âº ${cli.numero}`);
       if (cli.bairro) partesEndereco.push(`Bairro: ${cli.bairro}`);
       if (cli.complemento) partesEndereco.push(`(${cli.complemento})`);
 
@@ -168,7 +168,7 @@ export const Agenda: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clinicaId) {
-      alert('Selecione uma clAÂ­nica.');
+      alert('Selecione uma clAÃ‚Â­nica.');
       return;
     }
     if (itensLocacao.length === 0) {
@@ -236,7 +236,7 @@ export const Agenda: React.FC = () => {
           </div>
           <div>
             <h2 className="text-2xl font-black text-slate-800 tracking-tight">Agenda de Loca&ccedil;&otilde;es</h2>
-            <p className="text-sm font-medium text-slate-500">Gerenciamento diAÂ¡rio de equipamentos e compromissos</p>
+            <p className="text-sm font-medium text-slate-500">Gerenciamento diAÃ‚Â¡rio de equipamentos e compromissos</p>
           </div>
         </div>
         <Button onClick={() => handleOpenCreate()} leftIcon={<Plus className="w-4 h-4" />}>
@@ -244,7 +244,7 @@ export const Agenda: React.FC = () => {
         </Button>
       </div>
 
-      {/* Controles de MAÂªs */}
+      {/* Controles de MAÃ‚Âªs */}
       <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-100 px-6 py-4 shadow-sm">
         <div className="flex items-center gap-4">
           <button onClick={handlePrevMonth} className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600 transition-colors">
@@ -262,7 +262,7 @@ export const Agenda: React.FC = () => {
         </Button>
       </div>
 
-      {/* CalendAÂ¡rio Grid */}
+      {/* CalendAÃ‚Â¡rio Grid */}
       {loading ? (
         <div className="flex items-center justify-center p-20 bg-white rounded-3xl border border-slate-100">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
@@ -300,8 +300,8 @@ export const Agenda: React.FC = () => {
 
                 <div className="flex flex-col gap-2 overflow-y-auto max-h-[240px]">
                   {locacoesDoDia.map((loc) => {
-                    const nomeClinica = loc.clinica ? (loc.clinica.nomeFantasia || loc.clinica.razaoSocial) : 'ClAÂ­nica';
-                    const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nAÂ£o informada';
+                    const nomeClinica = loc.clinica ? (loc.clinica.nomeFantasia || loc.clinica.razaoSocial) : 'ClAÃ‚Â­nica';
+                    const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nAÃ‚Â£o informada';
                     const equipamentosStr = loc.itens && loc.itens.map((i) => i.equipamento?.descricao).filter(Boolean).join(', ') || 'Nenhum aparelho';
                     const tecnicoNome = loc.tecnico?.nome;
                     const motoristaNome = loc.motorista?.nome;
@@ -321,7 +321,7 @@ export const Agenda: React.FC = () => {
                         <div className="text-[11px] font-black text-indigo-600 truncate bg-white px-2 py-1 rounded-lg border border-indigo-100/50 mt-0.5" title={equipamentosStr}>
                           {equipamentosStr}
                         </div>
-                        {tecnicoNome && <div className="text-[11px] text-slate-600 truncate">TAÂ©cnico: {tecnicoNome}</div>}
+                        {tecnicoNome && <div className="text-[11px] text-slate-600 truncate">TAÃ‚Â©cnico: {tecnicoNome}</div>}
                         {motoristaNome && <div className="text-[11px] text-slate-600 truncate">Motorista: {motoristaNome}</div>}
                       </div>
                     );
@@ -338,7 +338,7 @@ export const Agenda: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Agendamento / EdiAÂ§AÂ£o */}
+      {/* Modal Agendamento / EdiAÃ‚Â§AÃ‚Â£o */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -355,7 +355,7 @@ export const Agenda: React.FC = () => {
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
                 required
               >
-                <option value="">Selecione uma clAÂ­nica...</option>
+                <option value="">Selecione uma clAÃ‚Â­nica...</option>
                 {clinicas.map((cli) => (
                   <option key={cli.id} value={cli.id}>
                     {cli.razaoSocial} {cli.nomeFantasia ? `(${cli.nomeFantasia})` : ''}
@@ -396,7 +396,7 @@ export const Agenda: React.FC = () => {
               label="Endere&ccedil;o da Loca&ccedil;&atilde;o (Rua, N&uacute;mero, Bairro)"
               value={enderecoLocacao}
               onChange={(e) => setEnderecoLocacao(e.target.value)}
-              placeholder="Rua, nAÂº, bairro..."
+              placeholder="Rua, nAÃ‚Âº, bairro..."
             />
             <Input
               label="Cidade / UF"
@@ -417,7 +417,7 @@ export const Agenda: React.FC = () => {
                 onChange={(e) => setTecnicoId(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
               >
-                <option value="">Selecione o TAÂ©cnico...</option>
+                <option value="">Selecione o TAÃ‚Â©cnico...</option>
                 {tecnicos.map((tec) => (
                   <option key={tec.id} value={tec.id}>
                     {tec.nome}
@@ -506,7 +506,7 @@ export const Agenda: React.FC = () => {
                 <option value="AGENDADA">Agendada</option>
                 <option value="CONFIRMADA">Confirmada</option>
                 <option value="EM_ANDAMENTO">Em Andamento</option>
-                <option value="CONCLUIDA">ConcluAÂ­da</option>
+                <option value="CONCLUIDA">ConcluAÃ‚Â­da</option>
                 <option value="CANCELADA">Cancelada</option>
               </select>
             </div>
@@ -532,7 +532,7 @@ export const Agenda: React.FC = () => {
               </Button>
               {selectedLocacao && <Button type="button" variant="outline" onClick={imprimirProtocolo}>Imprimir protocolo / PDF</Button>}
               <Button type="submit">
-                {selectedLocacao ? 'Salvar AlteraAÂ§AÂµes' : 'Concluir Agendamento'}
+                {selectedLocacao ? 'Salvar AlteraAÃ‚Â§AÃ‚Âµes' : 'Concluir Agendamento'}
               </Button>
             </div>
           </div>
@@ -540,24 +540,17 @@ export const Agenda: React.FC = () => {
       </Modal>
       {selectedLocacao && (
         <section className="print-protocol" aria-hidden="true">
-          <h1>CANETTI LOCAAâ€¡Aâ€¢ES aâ‚¬â€ PROTOCOLO DE ENTREGA</h1>
-          <p><strong>NAÂºmero:</strong> {String(selectedLocacao.codigo || selectedLocacao.id).padStart(8, '0')} &nbsp; <strong>Data:</strong> {dataInicio}</p>
-          <h2>Cliente</h2>
-          <p><strong>{selectedLocacao.clinica?.razaoSocial || selectedLocacao.clinica?.nomeFantasia || 'NAÂ£o informado'}</strong><br />
-            EndereAÂ§o: {enderecoLocacao || 'NAÂ£o informado'} aâ‚¬â€ {cidadeLocacao || 'Cidade nAÂ£o informada'}</p>
-          <p>Entrega: {horaInicio} &nbsp;&nbsp; Retirada: {horaFim}</p>
-          <h2>Equipamentos e valores</h2>
-          {itensLocacao.map((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return (
-            <div key={item.equipamentoId} className="protocol-item"><strong>{eq?.descricao || `Equipamento ${item.equipamentoId}`}</strong> aâ‚¬â€ DiAÂ¡ria: R$ {Number(item.valorDiaria || 0).toFixed(2)}
-              {tipos.length > 0 && <div>Disparos: {tipos.map((tipo) => `${tipo}: R$ ${Number(item.valoresDisparo?.[tipo] || 0).toFixed(2)}`).join(' | ')}</div>}
-            </div>);
-          })}
-          <p><strong>TAÂ©cnico:</strong> {selectedLocacao.tecnico?.nome || 'NAÂ£o informado'} &nbsp; <strong>Motorista:</strong> {selectedLocacao.motorista?.nome || 'NAÂ£o informado'}</p>
-          <p className="protocol-sign">Declaro que recebi e conferi os equipamentos e materiais assinalados.</p>
-          <div className="protocol-lines">Motorista: ____________________________________<br /><br />LocatAÂ¡ria: ____________________________________</div>
+          <header className="protocol-header"><b>CANETTI LOCACOES</b><span>Rua Angelo Cisotto, 86 - Cerquilho/SP<br/>Fones: (015) 3284-4278 / 3384-3630</span></header>
+          <h1>PROTOCOLO DE ENTREGA E RETIRADA</h1>
+          <div className="protocol-grid"><span>NUMERO: {String(selectedLocacao.codigo || selectedLocacao.id).padStart(8, '0')}</span><span>DATA: {dataInicio}</span><span>ENTREGA: {horaInicio}</span><span>RETIRADA: {horaFim}</span></div>
+          <div className="protocol-box"><b>CLIENTE:</b> {selectedLocacao.clinica?.razaoSocial || selectedLocacao.clinica?.nomeFantasia || 'NAO INFORMADO'}<br/><b>ENDERECO:</b> {enderecoLocacao || 'NAO INFORMADO'}<br/><b>CIDADE/UF:</b> {cidadeLocacao || 'NAO INFORMADA'}</div>
+          <table className="protocol-table"><thead><tr><th>APARELHO</th><th>LOCACAO</th><th>DISPAROS</th></tr></thead><tbody>{itensLocacao.map((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return <tr key={item.equipamentoId}><td>{eq?.descricao || 'EQUIPAMENTO'}</td><td>R$ {Number(item.valorDiaria || 0).toFixed(2)}</td><td>{tipos.map((tipo) => <div key={tipo}>{tipo}: R$ {Number(item.valoresDisparo?.[tipo] || 0).toFixed(2)}</div>)}</td></tr>; })}</tbody></table>
+          <div className="protocol-box"><b>OCORRENCIAS:</b><br/><br/><br/></div>
+          <div className="protocol-total">DESCONTO: R$ {Number(valorDesconto || 0).toFixed(2)}<b>TOTAL DA LOCACAO: R$ {Number(itensLocacao.reduce((sum, item) => sum + Number(item.valorDiaria || 0), 0) - Number(valorDesconto || 0)).toFixed(2)}</b></div>
+          <p className="protocol-sign">Declaro que recebi e conferi o equipamento e materiais assinalados.</p>
+          <div className="protocol-lines">Motorista: ________________________________<br/><br/>Tecnico: __________________________________<br/><br/>Locataria: _________________________________</div>
         </section>
-      )}
-    </div>
+      )}    </div>
   );
 };
 
