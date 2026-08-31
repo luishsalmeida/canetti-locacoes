@@ -60,6 +60,7 @@ export interface Equipamento {
   categoria?: CategoriaEquipamento;
   unidade: string;
   valorDiaria: number;
+  tiposDisparo?: string[];
   valorSemanal: number;
   valorMensal: number;
   status: 'DISPONIVEL' | 'LOCADO' | 'MANUTENCAO' | 'INATIVO';
@@ -76,6 +77,7 @@ export interface ItemLocacao {
   valorDiaria: number;
   quantidade: number;
   valorTotal: number;
+  valoresDisparo?: Record<string, number> | null;
   observacoes?: string | null;
 }
 
