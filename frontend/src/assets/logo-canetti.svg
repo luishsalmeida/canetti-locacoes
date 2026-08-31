@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 140" width="100%" height="100%">
+  <defs>
+    <style>
+      .red-dot { fill: #E31B23; }
+      .canetti-text { font-family: 'Arial Black', Arial, sans-serif; font-weight: 900; font-style: italic; font-size: 74px; fill: #E31B23; letter-spacing: -3px; }
+      .sub-text { font-family: Arial, sans-serif; font-weight: bold; font-size: 11.5px; fill: #1E293B; letter-spacing: 0.2px; }
+    </style>
+  </defs>
+
+  <!-- 7 Red Dots exatos acima do logo -->
+  <circle class="red-dot" cx="62" cy="20" r="9.5" />
+  <circle class="red-dot" cx="114" cy="20" r="9.5" />
+  <circle class="red-dot" cx="166" cy="20" r="9.5" />
+  <circle class="red-dot" cx="218" cy="20" r="9.5" />
+  <circle class="red-dot" cx="270" cy="20" r="9.5" />
+  <circle class="red-dot" cx="322" cy="20" r="9.5" />
+  <circle class="red-dot" cx="374" cy="20" r="9.5" />
+
+  <!-- CANETTI Text corrigido -->
+  <text x="32" y="98" class="canetti-text">Canetti</text>
+
+  <!-- Subtítulo oficial -->
+  <text x="250" y="112" class="sub-text">Locadora de Aparelhos a Laser</text>
+  <text x="282" y="128" class="sub-text">Médicos e Estéticos</text>
+</svg>
