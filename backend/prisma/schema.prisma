@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id           Int       @id @default(autoincrement())
+  nome         String    @map("nome")
+  login        String    @unique @map("login")
+  senha        String    @map("senha")
+  perfil       String    @default("OPERADOR")
+  ativo        Boolean   @default(true)
+  criadoEm     DateTime  @default(now()) @map("criado_em")
+  atualizadoEm DateTime  @updatedAt @map("atualizado_em")
+
+  locacoes     Locacao[]
+
+  @@map("usuarios")
+}
+
+model Colaborador {
+  id              Int       @id @default(autoincrement())
+  nome            String
+  funcao          String    @default("TECNICO") // TECNICO ou MOTORISTA
+  telefone        String?
+  email           String?
+  ativo           Boolean   @default(true)
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @updatedAt @map("atualizado_em")
+
+  locacoesTecnico Locacao[] @relation("TecnicoRel")
+  locacoesMotorista Locacao[] @relation("MotoristaRel")
+
+  @@map("colaboradores")
+}
+
+model Clinica {
+  id              Int       @id @default(autoincrement())
+  codigo          Int?      @unique
+  razaoSocial     String    @map("razao_social")
+  nomeFantasia    String?   @map("nome_fantasia")
+  tipoPessoa      String    @default("JURIDICA") @map("tipo_pessoa")
+  cnpjCpf         String?   @map("cnpj_cpf")
+  ie              String?
+  email           String?
+  telefone        String?
+  celular         String?
+  contato         String?
+  endereco        String?
+  numero          String?
+  complemento     String?
+  bairro          String?
+  cidade          String?
+  uf              String?
+  cep             String?
+  regiao          String?
+  observacoes     String?
+  status          String    @default("ATIVA")
+  limiteCredito   Float     @default(0) @map("limite_credito")
+  saldoCredor     Float     @default(0) @map("saldo_credor")
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @updatedAt @map("atualizado_em")
+
+  locacoes        Locacao[]
+
+  @@map("clinicas")
+}
+
+model CategoriaEquipamento {
+  id           Int           @id @default(autoincrement())
+  nome         String
+  descricao    String?
+  criadoEm     DateTime      @default(now()) @map("criado_em")
+  atualizadoEm DateTime      @updatedAt @map("atualizado_em")
+
+  equipamentos Equipamento[]
+
+  @@map("categorias_equipamentos")
+}
+
+model Equipamento {
+  id              Int                  @id @default(autoincrement())
+  codigo          Int?                 @unique
+  descricao       String
+  modelo          String?
+  marca           String?
+  numeroSerie     String?              @unique @map("numero_serie")
+  patrimonio      String?              @unique
+  categoriaId     Int                  @map("categoria_id")
+  unidade         String               @default("UN")
+  valorDiaria     Float                @default(0) @map("valor_diaria")
+  valorSemanal    Float                @default(0) @map("valor_semanal")
+  valorMensal     Float                @default(0) @map("valor_mensal")
+  status          String               @default("DISPONIVEL")
+  observacoes     String?
+  criadoEm        DateTime             @default(now()) @map("criado_em")
+  atualizadoEm    DateTime             @updatedAt @map("atualizado_em")
+
+  categoria       CategoriaEquipamento @relation(fields: [categoriaId], references: [id])
+  itensLocacao    ItemLocacao[]
+
+  @@index([categoriaId])
+  @@index([status])
+  @@map("equipamentos")
+}
+
+model Locacao {
+  id                Int           @id @default(autoincrement())
+  codigo            Int?          @unique
+  clinicaId         Int           @map("clinica_id")
+  dataInicio        DateTime      @map("data_inicio")
+  horaInicio        String?       @map("hora_inicio")
+  dataFim           DateTime      @map("data_fim")
+  horaFim           String?       @map("hora_fim")
+  enderecoLocacao   String?       @map("endereco_locacao")
+  cidadeLocacao     String?       @map("cidade_locacao")
+  responsavel       String?
+  telefoneResp      String?       @map("telefone_resp")
+  valorTotal        Float         @default(0) @map("valor_total")
+  valorDesconto     Float         @default(0) @map("valor_desconto")
+  valorFinal        Float         @default(0) @map("valor_final")
+  observacoes       String?
+  status            String        @default("AGENDADA")
+
+  tecnicoId         Int?          @map("tecnico_id")
+  motoristaId       Int?          @map("motorista_id")
+
+  criadoPorId       Int?          @map("criado_por_id")
+  criadoEm          DateTime      @default(now()) @map("criado_em")
+  atualizadoEm      DateTime      @updatedAt @map("atualizado_em")
+
+  clinica           Clinica       @relation(fields: [clinicaId], references: [id])
+  tecnico           Colaborador?  @relation("TecnicoRel", fields: [tecnicoId], references: [id])
+  motorista         Colaborador?  @relation("MotoristaRel", fields: [motoristaId], references: [id])
+  criadoPor         Usuario?      @relation(fields: [criadoPorId], references: [id])
+  itens             ItemLocacao[]
+
+  @@index([clinicaId])
+  @@index([dataInicio])
+  @@index([status])
+  @@map("locacoes")
+}
+
+model ItemLocacao {
+  id              Int         @id @default(autoincrement())
+  locacaoId       Int         @map("locacao_id")
+  equipamentoId   Int         @map("equipamento_id")
+  valorDiaria     Float       @map("valor_diaria")
+  quantidade      Int         @default(1)
+  valorTotal      Float       @map("valor_total")
+  observacoes     String?
+
+  locacao         Locacao     @relation(fields: [locacaoId], references: [id], onDelete: Cascade)
+  equipamento     Equipamento @relation(fields: [equipamentoId], references: [id])
+
+  @@index([locacaoId])
+  @@index([equipamentoId])
+  @@map("itens_locacao")
+}
+
+model Configuracao {
+  id           Int      @id @default(autoincrement())
+  chave        String   @unique
+  valor        String
+  descricao    String?
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  @@map("configuracoes")
+}
