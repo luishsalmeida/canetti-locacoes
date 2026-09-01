@@ -18,12 +18,13 @@
   .protocol-box { border:1px solid #111; padding:1.5mm; margin-top:2mm; line-height:1.3; break-inside:avoid; }
   .protocol-table { width:100%; border-collapse:collapse; margin-top:2mm; font-size:7.6pt; break-inside:avoid; }
   .protocol-table th,.protocol-table td { border:1px solid #111; padding:1.3mm; text-align:left; vertical-align:top; } .protocol-table th { background:#eee; }
+  .protocol-table td:nth-child(1), .protocol-table td:nth-child(2) { font-size:10pt; font-weight:700; }
   .protocol-split { display:grid; grid-template-columns:1fr 1fr; gap:2mm; } .protocol-split .protocol-box { min-height:12mm; }
   .protocol-firing { font-size:7.3pt; } .protocol-firing table { width:100%; border-collapse:collapse; margin-top:1mm; } .protocol-firing th,.protocol-firing td { border:1px solid #111; padding:1mm; height:4mm; text-align:left; } .protocol-firing th { background:#eee; }
-  .protocol-money { display:grid; grid-template-columns:1fr 2fr; gap:0; border:1px solid #111; margin-top:2mm; } .protocol-money > div { padding:1.5mm; } .protocol-money > div + div { border-left:1px solid #111; }
-  .protocol-sign { margin:2mm 0 0; border-top:1px solid #111; padding-top:1.5mm; font-size:7.5pt; }
+  .protocol-money { display:grid; grid-template-columns:1fr 2fr; gap:0; border:1px solid #111; margin-top:2mm; font-size:8pt; } .protocol-money > div { padding:1.5mm; } .protocol-money > div + div { border-left:1px solid #111; }
+  .protocol-sign { margin: auto 0 0; border-top:1px solid #111; padding-top:1.5mm; font-size:7.5pt; }
   .protocol-freelancer { margin:2mm 0 0; border:1px solid #111; padding:1.5mm; font-size:7pt; line-height:1.3; text-align:justify; }
-  .protocol-lines { margin-top:auto; padding-top:6mm; display:flex; justify-content:space-between; line-height:1.25; white-space:nowrap; font-size:8pt; }
+  .protocol-lines { margin-top:5mm; padding-top:0; display:flex; justify-content:space-between; line-height:1.25; white-space:nowrap; font-size:8pt; }
 }
 
 @layer base {
