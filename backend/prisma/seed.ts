@@ -4,9 +4,9 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Iniciando semeadura do banco de dados...');
+  console.log('ðŸŒ± Iniciando semeadura do banco de dados...');
 
-  // Limpar banco (compatível com SQLite)
+  // Limpar banco (compatÃ­vel com SQLite)
   try {
     await prisma.itemLocacao.deleteMany();
     await prisma.locacao.deleteMany();
@@ -15,12 +15,17 @@ async function main() {
     await prisma.clinica.deleteMany();
     await prisma.usuario.deleteMany();
   } catch (e) {
-    console.log('Tabelas ainda não existem, criando dados iniciais...');
+    console.log('Tabelas ainda nÃ£o existem, criando dados iniciais...');
   }
 
-  // Usuários
-  const senhaHash = await bcrypt.hash('admin123', 10);
-  const operadorHash = await bcrypt.hash('operador123', 10);
+  // UsuÃ¡rios
+  const senhaAdmin = process.env.SEED_ADMIN_PASSWORD;
+  const senhaOperador = process.env.SEED_OPERADOR_PASSWORD;
+  if (!senhaAdmin || senhaAdmin.length < 12 || !senhaOperador || senhaOperador.length < 12) {
+    throw new Error('Defina SEED_ADMIN_PASSWORD e SEED_OPERADOR_PASSWORD fortes antes de executar a semeadura.');
+  }
+  const senhaHash = await bcrypt.hash(senhaAdmin, 12);
+  const operadorHash = await bcrypt.hash(senhaOperador, 12);
 
   const admin = await prisma.usuario.create({
     data: {
@@ -33,7 +38,7 @@ async function main() {
 
   const operador = await prisma.usuario.create({
     data: {
-      nome: 'Operador Padrão',
+      nome: 'Operador PadrÃ£o',
       login: 'operador',
       senha: operadorHash,
       perfil: 'OPERADOR',
@@ -43,8 +48,8 @@ async function main() {
   // Categorias de equipamentos
   const catEstetica = await prisma.categoriaEquipamento.create({
     data: {
-      nome: 'Estética Facial',
-      descricao: 'Equipamentos para tratamentos estéticos faciais',
+      nome: 'EstÃ©tica Facial',
+      descricao: 'Equipamentos para tratamentos estÃ©ticos faciais',
     },
   });
 
@@ -57,15 +62,15 @@ async function main() {
 
   const catCorpo = await prisma.categoriaEquipamento.create({
     data: {
-      nome: 'Estética Corporal',
-      descricao: 'Equipamentos para estética e modelagem corporal',
+      nome: 'EstÃ©tica Corporal',
+      descricao: 'Equipamentos para estÃ©tica e modelagem corporal',
     },
   });
 
   // Equipamentos
   const eq1 = await prisma.equipamento.create({
     data: {
-      descricao: 'Microcorrente Estética',
+      descricao: 'Microcorrente EstÃ©tica',
       modelo: 'MC-5000',
       marca: 'Canetti',
       numeroSerie: 'MC2024001',
@@ -97,7 +102,7 @@ async function main() {
 
   const eq3 = await prisma.equipamento.create({
     data: {
-      descricao: 'Radiofrequência Corporal',
+      descricao: 'RadiofrequÃªncia Corporal',
       modelo: 'RF-2000',
       marca: 'Canetti',
       numeroSerie: 'RF2024001',
@@ -113,7 +118,7 @@ async function main() {
 
   const eq4 = await prisma.equipamento.create({
     data: {
-      descricao: 'Ultrasom Terapêutico',
+      descricao: 'Ultrasom TerapÃªutico',
       modelo: 'US-1000',
       marca: 'PhysioMed',
       numeroSerie: 'US2024001',
@@ -127,11 +132,11 @@ async function main() {
     },
   });
 
-  // Clínicas
+  // ClÃ­nicas
   const cli1 = await prisma.clinica.create({
     data: {
-      razaoSocial: 'Clínica Renova Estética',
-      nomeFantasia: 'Renova Estética',
+      razaoSocial: 'ClÃ­nica Renova EstÃ©tica',
+      nomeFantasia: 'Renova EstÃ©tica',
       tipoPessoa: 'JURIDICA',
       cnpjCpf: '12.345.678/0001-90',
       ie: '123.456.789.012',
@@ -143,7 +148,7 @@ async function main() {
       numero: '1000',
       complemento: 'Sala 301',
       bairro: 'Bela Vista',
-      cidade: 'São Paulo',
+      cidade: 'SÃ£o Paulo',
       uf: 'SP',
       cep: '01310-100',
       status: 'ATIVA',
@@ -160,7 +165,7 @@ async function main() {
       email: 'contato@bemestar.com.br',
       telefone: '(21) 3333-4444',
       celular: '(21) 99876-5432',
-      contato: 'João Santos',
+      contato: 'JoÃ£o Santos',
       endereco: 'Rua das Laranjeiras',
       numero: '250',
       bairro: 'Laranjeiras',
@@ -184,7 +189,7 @@ async function main() {
       contato: 'Ana Ferreira',
       endereco: 'Av. Afonso Pena',
       numero: '800',
-      bairro: 'Funcionários',
+      bairro: 'FuncionÃ¡rios',
       cidade: 'Belo Horizonte',
       uf: 'MG',
       cep: '30130-009',
@@ -195,7 +200,7 @@ async function main() {
 
   const cli4 = await prisma.clinica.create({
     data: {
-      razaoSocial: 'Espaço Vida Estética',
+      razaoSocial: 'EspaÃ§o Vida EstÃ©tica',
       tipoPessoa: 'JURIDICA',
       cnpjCpf: '44.555.666/0001-77',
       status: 'BLOQUEADA',
@@ -203,7 +208,7 @@ async function main() {
     },
   });
 
-  // Locações
+  // LocaÃ§Ãµes
   const loc1 = await prisma.locacao.create({
     data: {
       clinicaId: cli1.id,
@@ -211,8 +216,8 @@ async function main() {
       horaInicio: '08:00',
       dataFim: new Date('2026-09-25'),
       horaFim: '18:00',
-      enderecoLocacao: 'Av. Paulista, 1000 — Sala 301',
-      cidadeLocacao: 'São Paulo',
+      enderecoLocacao: 'Av. Paulista, 1000 â€” Sala 301',
+      cidadeLocacao: 'SÃ£o Paulo',
       responsavel: 'Dra. Maria',
       telefoneResp: '(11) 98765-4321',
       valorTotal: 4500.00,
@@ -240,7 +245,7 @@ async function main() {
       horaFim: '18:00',
       enderecoLocacao: 'Rua das Laranjeiras, 250',
       cidadeLocacao: 'Rio de Janeiro',
-      responsavel: 'João',
+      responsavel: 'JoÃ£o',
       telefoneResp: '(21) 99876-5432',
       valorTotal: 600.00,
       valorDesconto: 0,
@@ -284,19 +289,20 @@ async function main() {
     },
   });
 
-  console.log('✅ Dados criados com sucesso!');
-  console.log('   - 2 usuários (admin / operador)');
+  console.log('âœ… Dados criados com sucesso!');
+  console.log('   - 2 usuÃ¡rios (admin / operador)');
   console.log('   - 3 categorias de equipamentos');
   console.log('   - 4 equipamentos');
-  console.log('   - 4 clínicas');
-  console.log('   - 3 locações');
+  console.log('   - 4 clÃ­nicas');
+  console.log('   - 3 locaÃ§Ãµes');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Erro na semeadura:', e);
+    console.error('âŒ Erro na semeadura:', e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
   });
+
