@@ -226,6 +226,8 @@ export const Agenda: React.FC = () => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const dataProtocolo = dataInicio ? dataInicio.split('-').reverse().join('/') : '';
+  const totalDiariasProtocolo = itensLocacao.reduce((sum, item) => sum + Number(item.valorDiaria || 0), 0);
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-[1600px] mx-auto w-full">
@@ -541,18 +543,17 @@ export const Agenda: React.FC = () => {
       </Modal>
       {selectedLocacao && (
         <section className="print-protocol" aria-hidden="true">
-          <header className="protocol-header"><img src={protocoloLogo} alt="Canetti"/><span>Rua Angelo Cisotto, 86 - Cerquilho/SP<br/>Fones: (015) 3284-4278 / 3384-3630</span></header>
+          <header className="protocol-header"><img src={protocoloLogo} alt="Canetti"/><span>Rua Angelo Cisotto, 86 - Cerquilho/SP<br/>CEP 18520-000 - Cerquilho/SP<br/>Fones: (015) 3284-4278 / 3384-3630<br/>canetti.locacao@hotmail.com</span></header>
           <h1>PROTOCOLO DE ENTREGA E RETIRADA</h1>
-          <div className="protocol-grid"><span>NUMERO: {String(selectedLocacao.codigo || selectedLocacao.id).padStart(8, '0')}</span><span>DATA: {dataInicio}</span><span>ENTREGA: {horaInicio}</span><span>RETIRADA: {horaFim}</span></div>
-          <div className="protocol-box"><b>CLIENTE:</b> {selectedLocacao.clinica?.razaoSocial || selectedLocacao.clinica?.nomeFantasia || 'NAO INFORMADO'}<br/><b>ENDERECO:</b> {enderecoLocacao || 'NAO INFORMADO'}<br/><b>CIDADE/UF:</b> {cidadeLocacao || 'NAO INFORMADA'}</div>
-          <table className="protocol-table"><thead><tr><th>APARELHO</th><th>LOCACAO</th><th>DISPAROS</th></tr></thead><tbody>{itensLocacao.map((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return <tr key={item.equipamentoId}><td>{eq?.descricao || 'EQUIPAMENTO'}</td><td>R$ {Number(item.valorDiaria || 0).toFixed(2)}</td><td>{tipos.map((tipo) => <div key={tipo}>{tipo}: R$ {Number(item.valoresDisparo?.[tipo] || 0).toFixed(2)}</div>)}</td></tr>; })}</tbody></table>
-          <div className="protocol-box"><b>OCORRENCIAS:</b><br/><br/><br/></div>
-          <div className="protocol-box"><b>MATERIAIS CONFERIDOS:</b><br/>[ ] Oculos de protecao &nbsp;&nbsp; [ ] Cabo de energia &nbsp;&nbsp; [ ] Pedal &nbsp;&nbsp; [ ] Ponteiras e acessorios</div>
-          <div className="protocol-box"><b>CONTROLE DE DISPAROS:</b><br/>Leitura inicial: ____________________ &nbsp;&nbsp; Leitura final: ____________________ &nbsp;&nbsp; Diferenca: ____________________</div>
-          <div className="protocol-total">DESCONTO: R$ {Number(valorDesconto || 0).toFixed(2)}<b>TOTAL DA LOCACAO: R$ {Number(itensLocacao.reduce((sum, item) => sum + Number(item.valorDiaria || 0), 0) - Number(valorDesconto || 0)).toFixed(2)}</b></div>
-          <div className="protocol-payment"><b>FORMA DE PAGAMENTO:</b> [ ] PIX &nbsp;&nbsp; [ ] DINHEIRO &nbsp;&nbsp; [ ] CHEQUE</div>
-          <p className="protocol-sign">Declaro que recebi e conferi o equipamento e materiais assinalados.</p>
-          <div className="protocol-lines">Motorista: ________________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Locataria: _________________________________</div>
+          <div className="protocol-grid"><span><b>NUMERO:</b> {String(selectedLocacao.codigo || selectedLocacao.id).padStart(8, '0')}</span><span><b>DATA:</b> {dataProtocolo}</span><span><b>ENTREGA:</b> {horaInicio}</span><span><b>RETIRADA:</b> {horaFim}</span></div>
+          <div className="protocol-client"><div><b>CLIENTE:</b> {selectedLocacao.clinica?.razaoSocial || selectedLocacao.clinica?.nomeFantasia || 'NAO INFORMADO'}<br/><b>ENDERECO:</b> {enderecoLocacao || 'NAO INFORMADO'}<br/><b>CIDADE / UF:</b> {cidadeLocacao || 'NAO INFORMADA'}</div><div><b>FONE:</b> {selectedLocacao.clinica?.telefone || selectedLocacao.clinica?.celular || '________________'}<br/><b>CPF/CNPJ:</b> {selectedLocacao.clinica?.cnpjCpf || '________________'}<br/><b>CONTATO:</b> {selectedLocacao.clinica?.contato || '________________'}</div></div>
+          <table className="protocol-table"><thead><tr><th>MODELO / APARELHO</th><th>VALOR DA LOCACAO</th><th>VALOR DOS DISPAROS</th></tr></thead><tbody>{itensLocacao.map((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return <tr key={item.equipamentoId}><td>{eq?.descricao || 'EQUIPAMENTO'}</td><td>R$ {Number(item.valorDiaria || 0).toFixed(2)}</td><td>{tipos.length ? tipos.map((tipo) => <div key={tipo}>{tipo}: R$ {Number(item.valoresDisparo?.[tipo] || 0).toFixed(2)}</div>) : 'NAO SE APLICA'}</td></tr>; })}</tbody></table>
+          <div className="protocol-split"><div className="protocol-box"><b>OCORRENCIAS:</b><br/>{selectedLocacao.observacoes || '_______________________________________________________________'}<br/>_______________________________________________________________</div><div className="protocol-box"><b>MATERIAIS CONFERIDOS:</b><br/>[ ] OCULOS &nbsp; [ ] PONTEIRA ET &nbsp; [ ] PONTEIRA HS<br/>[ ] TIP HS &nbsp; [ ] CABO &nbsp; [ ] PEDAL</div></div>
+          <div className="protocol-box protocol-firing"><b>CONTROLE DE DISPAROS / HANDPIECES</b><table><thead><tr><th>TIPO</th><th>DIS. INICIAIS</th><th>DIS. FINAIS</th><th>DIFERENCA</th></tr></thead><tbody>{itensLocacao.flatMap((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return tipos.map((tipo) => <tr key={`${item.equipamentoId}-${tipo}`}><td>{tipo}</td><td></td><td></td><td></td></tr>); })}</tbody></table></div>
+          <div className="protocol-money"><div><b>LOCACAO:</b> R$ {totalDiariasProtocolo.toFixed(2)}<br/><b>DESCONTO:</b> R$ {Number(valorDesconto || 0).toFixed(2)}</div><div><b>TOTAL DA LOCACAO:</b> R$ {Number(totalDiariasProtocolo - Number(valorDesconto || 0)).toFixed(2)}<br/><b>FORMA DE PAGAMENTO:</b> [ ] PIX &nbsp; [ ] DINHEIRO &nbsp; [ ] CHEQUE &nbsp; [ ] BOLETO</div></div>
+          <p className="protocol-sign">Declaro que recebi e conferi o equipamento e os materiais assinalados, e que os handpieces nao estao com os cristais danificados.</p>
+          <p className="protocol-freelancer">DECLARO PARA OS FINS DE DIREITO QUE CONTRATEI OS SERVICOS DE <b>{selectedLocacao.tecnico?.nome || '________________________________'}</b>, NA FUNCAO DE TECNICA DE ESTETICA, COMO FREELANCER, COM A FINALIDADE DE OPERAR O EQUIPAMENTO DE ESTETICA LOCADO NESTA DATA, CUJO VALOR PELO SERVICO CONTRATADO CORRERA EXCLUSIVAMENTE SOB A RESPONSABILIDADE DA LOCATARIA.</p>
+          <div className="protocol-lines"><span>Motorista - Veiculo: __________________________</span><span>Locataria / Empresa: __________________________</span></div>
         </section>
       )}    </div>
   );
