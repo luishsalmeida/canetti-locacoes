@@ -84,7 +84,7 @@ export interface ItemLocacao {
 export interface Pagamento {
   id?: number;
   locacaoId?: number;
-  forma: 'PIX' | 'DINHEIRO' | 'CHEQUE' | 'BOLETO' | 'TRANSFERENCIA';
+  forma: 'EMPRESA' | 'DR';
   valor: number;
   status: 'PENDENTE' | 'RECEBIDO' | 'VENCIDO' | 'CANCELADO';
   vencimento?: string | null;
