@@ -8,6 +8,7 @@ $ErrorActionPreference = 'Stop'
 $scriptPath = Join-Path $PSScriptRoot 'sincronizar-relatorio-locacoes.ps1'
 $protocolScriptPath = Join-Path $PSScriptRoot 'acionar-sincronizacao-relatorio.ps1'
 $buttonServerPath = Join-Path $PSScriptRoot 'servidor-botao-excel.ps1'
+$backgroundScriptPath = Join-Path $PSScriptRoot 'sincronizar-relatorio-background.ps1'
 if (-not (Test-Path -LiteralPath $scriptPath)) {
   throw 'O script de sincronizacao nao foi encontrado.'
 }
@@ -16,6 +17,9 @@ if (-not (Test-Path -LiteralPath $protocolScriptPath)) {
 }
 if (-not (Test-Path -LiteralPath $buttonServerPath)) {
   throw 'O servidor local do botao de sincronizacao nao foi encontrado.'
+}
+if (-not (Test-Path -LiteralPath $backgroundScriptPath)) {
+  throw 'O executor em segundo plano da sincronizacao nao foi encontrado.'
 }
 
 $configDir = Join-Path $env:LOCALAPPDATA 'CanettiLocacoes'
