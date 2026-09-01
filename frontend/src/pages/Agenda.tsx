@@ -4,8 +4,8 @@ import { Locacao, Clinica, Equipamento, Colaborador, StatusLocacao } from '../ty
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { Input } from '../components/Input';
-import { ChevronLeft, ChevronRight, Plus, Clock, Shield, Truck, Calendar as CalendarIcon } from 'lucide-react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
+import { ChevronLeft, ChevronRight, Plus, Clock, Shield, Truck, Calendar as CalendarIcon, Search, SlidersHorizontal, X } from 'lucide-react';
+import { format, addMonths, subMonths, addWeeks, subWeeks, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import protocoloLogo from '../assets/canetti-logo-transparent.png';
 
@@ -35,6 +35,12 @@ export const Agenda: React.FC = () => {
   const [tecnicos, setTecnicos] = useState<Colaborador[]>([]);
   const [motoristas, setMotoristas] = useState<Colaborador[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modoVisualizacao, setModoVisualizacao] = useState<'MES' | 'SEMANA'>('MES');
+  const [busca, setBusca] = useState('');
+  const [filtroEquipamentoId, setFiltroEquipamentoId] = useState('');
+  const [filtroTecnicoId, setFiltroTecnicoId] = useState('');
+  const [filtroMotoristaId, setFiltroMotoristaId] = useState('');
+  const [filtroStatus, setFiltroStatus] = useState<'' | StatusLocacao>('');
 
   // Modal State
   const [modalOpen, setModalOpen] = useState(false);
@@ -51,17 +57,35 @@ export const Agenda: React.FC = () => {
   const [motoristaId, setMotoristaId] = useState<string | number>('');
   const [itensLocacao, setItensLocacao] = useState<ItemAgendamento[]>([]);
   const [valorDesconto, setValorDesconto] = useState<number>(0);
+  const [formaPagamento, setFormaPagamento] = useState<'PIX' | 'DINHEIRO' | 'CHEQUE' | 'BOLETO' | 'TRANSFERENCIA'>('PIX');
+  const [valorPagamento, setValorPagamento] = useState<number>(0);
+  const [statusPagamento, setStatusPagamento] = useState<'PENDENTE' | 'RECEBIDO'>('PENDENTE');
   const [observacoes, setObservacoes] = useState('');
   const [status, setStatus] = useState<StatusLocacao>('AGENDADA');
+
+  const periodoInicio = modoVisualizacao === 'SEMANA'
+    ? startOfWeek(currentDate, { weekStartsOn: 1 })
+    : startOfMonth(currentDate);
+  const periodoFim = modoVisualizacao === 'SEMANA'
+    ? endOfWeek(currentDate, { weekStartsOn: 1 })
+    : endOfMonth(currentDate);
+  const diasVisiveis = eachDayOfInterval({ start: periodoInicio, end: periodoFim });
 
   const carregarDados = async () => {
     setLoading(true);
     try {
-      const dStart = format(startOfMonth(currentDate), 'yyyy-MM-dd');
-      const dEnd = format(endOfMonth(currentDate), 'yyyy-MM-dd');
+      const parametros = new URLSearchParams({
+        dataInicio: format(periodoInicio, 'yyyy-MM-dd'),
+        dataFim: format(periodoFim, 'yyyy-MM-dd'),
+      });
+      if (busca.trim()) parametros.set('busca', busca.trim());
+      if (filtroEquipamentoId) parametros.set('equipamentoId', filtroEquipamentoId);
+      if (filtroTecnicoId) parametros.set('tecnicoId', filtroTecnicoId);
+      if (filtroMotoristaId) parametros.set('motoristaId', filtroMotoristaId);
+      if (filtroStatus) parametros.set('status', filtroStatus);
 
       const [resLoc, resCli, resEq, resTec, resMot] = await Promise.all([
-        api.get<Locacao[]>(`/locacoes?dataInicio=${dStart}&dataFim=${dEnd}`).catch(() => []),
+        api.get<Locacao[]>(`/locacoes?${parametros.toString()}`).catch(() => []),
         api.get<Clinica[]>('/clinicas').catch(() => []),
         api.get<Equipamento[]>('/equipamentos').catch(() => []),
         api.get<Colaborador[]>('/colaboradores?funcao=TECNICO').catch(() => []),
@@ -82,7 +106,7 @@ export const Agenda: React.FC = () => {
 
   useEffect(() => {
     carregarDados();
-  }, [currentDate]);
+  }, [currentDate, modoVisualizacao, busca, filtroEquipamentoId, filtroTecnicoId, filtroMotoristaId, filtroStatus]);
 
   const handleClinicaChange = (idStr: string) => {
     const id = idStr ? Number(idStr) : '';
@@ -116,6 +140,9 @@ export const Agenda: React.FC = () => {
     setMotoristaId('');
     setItensLocacao([]);
     setValorDesconto(0);
+    setFormaPagamento('PIX');
+    setValorPagamento(0);
+    setStatusPagamento('PENDENTE');
     setObservacoes('');
     setStatus('AGENDADA');
     setModalOpen(true);
@@ -139,6 +166,10 @@ export const Agenda: React.FC = () => {
       }))
     );
     setValorDesconto(loc.valorDesconto || 0);
+    const pagamento = loc.pagamentos?.[0];
+    setFormaPagamento(pagamento?.forma || 'PIX');
+    setValorPagamento(Number(pagamento?.valor || 0));
+    setStatusPagamento(pagamento?.status === 'RECEBIDO' ? 'RECEBIDO' : 'PENDENTE');
     setObservacoes(loc.observacoes || '');
     setStatus(loc.status || 'AGENDADA');
     setModalOpen(true);
@@ -188,6 +219,7 @@ export const Agenda: React.FC = () => {
       motoristaId: motoristaId ? Number(motoristaId) : null,
       itens: itensLocacao,
       valorDesconto: Number(valorDesconto || 0),
+      pagamentos: valorPagamento > 0 ? [{ forma: formaPagamento, valor: Number(valorPagamento), status: statusPagamento, recebidoEm: statusPagamento === 'RECEBIDO' ? dataInicio : null }] : [],
       observacoes,
       status,
     };
@@ -220,12 +252,18 @@ export const Agenda: React.FC = () => {
     }
   };
 
-  const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
-  const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const handlePrevPeriodo = () => setCurrentDate(modoVisualizacao === 'SEMANA' ? subWeeks(currentDate, 1) : subMonths(currentDate, 1));
+  const handleNextPeriodo = () => setCurrentDate(modoVisualizacao === 'SEMANA' ? addWeeks(currentDate, 1) : addMonths(currentDate, 1));
+  const limparFiltros = () => {
+    setBusca('');
+    setFiltroEquipamentoId('');
+    setFiltroTecnicoId('');
+    setFiltroMotoristaId('');
+    setFiltroStatus('');
+  };
+  const tituloPeriodo = modoVisualizacao === 'SEMANA'
+    ? `Semana de ${format(periodoInicio, 'dd/MM')} a ${format(periodoFim, 'dd/MM/yyyy')}`
+    : format(currentDate, 'MMMM yyyy', { locale: ptBR });
   const dataProtocolo = dataInicio ? dataInicio.split('-').reverse().join('/') : '';
   const totalDiariasProtocolo = itensLocacao.reduce((sum, item) => sum + Number(item.valorDiaria || 0), 0);
 
@@ -247,16 +285,68 @@ export const Agenda: React.FC = () => {
         </Button>
       </div>
 
-      {/* Controles de mes */}
+      {/* Busca, filtros e periodo */}
+      <div className="bg-white rounded-2xl border border-slate-100 px-6 py-5 shadow-sm space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
+          <label className="xl:col-span-2 relative">
+            <span className="sr-only">Pesquisa rapida</span>
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Pesquisar clinica, aparelho, protocolo ou cidade"
+              className="w-full h-11 pl-10 pr-3 rounded-xl border border-slate-200 text-sm text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+            />
+          </label>
+          <select value={filtroEquipamentoId} onChange={(e) => setFiltroEquipamentoId(e.target.value)} className="h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 bg-white">
+            <option value="">Todos os aparelhos</option>
+            {equipamentos.map((equipamento) => <option key={equipamento.id} value={equipamento.id}>{equipamento.descricao}</option>)}
+          </select>
+          <select value={filtroTecnicoId} onChange={(e) => setFiltroTecnicoId(e.target.value)} className="h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 bg-white">
+            <option value="">Todos os tecnicos</option>
+            {tecnicos.map((tecnico) => <option key={tecnico.id} value={tecnico.id}>{tecnico.nome}</option>)}
+          </select>
+          <select value={filtroMotoristaId} onChange={(e) => setFiltroMotoristaId(e.target.value)} className="h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 bg-white">
+            <option value="">Todos os motoristas</option>
+            {motoristas.map((motorista) => <option key={motorista.id} value={motorista.id}>{motorista.nome}</option>)}
+          </select>
+          <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value as '' | StatusLocacao)} className="h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 bg-white">
+            <option value="">Todos os status</option>
+            <option value="AGENDADA">Agendada</option>
+            <option value="CONFIRMADA">Confirmada</option>
+            <option value="EM_ANDAMENTO">Em andamento</option>
+            <option value="CONCLUIDA">Concluida</option>
+            <option value="CANCELADA">Cancelada</option>
+            <option value="NO_SHOW">Nao compareceu</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 pt-4">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-slate-400" />
+            <div className="inline-flex rounded-xl bg-slate-100 p-1">
+              <button onClick={() => setModoVisualizacao('MES')} className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${modoVisualizacao === 'MES' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Mes</button>
+              <button onClick={() => setModoVisualizacao('SEMANA')} className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${modoVisualizacao === 'SEMANA' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Semana</button>
+            </div>
+            {(busca || filtroEquipamentoId || filtroTecnicoId || filtroMotoristaId || filtroStatus) && (
+              <button onClick={limparFiltros} className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600" title="Limpar filtros">
+                <X className="w-3.5 h-3.5" /> Limpar filtros
+              </button>
+            )}
+          </div>
+          <span className="text-xs font-semibold text-slate-400">{locacoes.length} agendamento(s) encontrado(s)</span>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-100 px-6 py-4 shadow-sm">
         <div className="flex items-center gap-4">
-          <button onClick={handlePrevMonth} className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600 transition-colors">
+          <button onClick={handlePrevPeriodo} className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600 transition-colors" aria-label="Periodo anterior">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <span className="text-lg font-black text-slate-800 capitalize min-w-[180px] text-center">
-            {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
+            {tituloPeriodo}
           </span>
-          <button onClick={handleNextMonth} className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600 transition-colors">
+          <button onClick={handleNextPeriodo} className="p-2 hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-600 transition-colors" aria-label="Proximo periodo">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -272,7 +362,7 @@ export const Agenda: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
-          {daysInMonth.map((day) => {
+          {diasVisiveis.map((day) => {
             const dateStr = format(day, 'yyyy-MM-dd');
             const locacoesDoDia = locacoes.filter((l) => l.dataInicio && l.dataInicio.split('T')[0] === dateStr);
             const isToday = isSameDay(day, new Date());
@@ -520,6 +610,22 @@ export const Agenda: React.FC = () => {
               value={valorDesconto}
               onChange={(e) => setValorDesconto(Number(e.target.value))}
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Forma de Pagamento</label>
+              <select value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value as typeof formaPagamento)} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800">
+                <option value="PIX">PIX</option><option value="DINHEIRO">Dinheiro</option><option value="CHEQUE">Cheque</option><option value="BOLETO">Boleto</option><option value="TRANSFERENCIA">Transferencia</option>
+              </select>
+            </div>
+            <Input label="Valor Recebido (R$)" type="number" step="0.01" value={valorPagamento} onChange={(e) => setValorPagamento(Number(e.target.value))} />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Situacao do Pagamento</label>
+              <select value={statusPagamento} onChange={(e) => setStatusPagamento(e.target.value as typeof statusPagamento)} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800">
+                <option value="PENDENTE">Pendente</option><option value="RECEBIDO">Recebido</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex items-center justify-between border-t border-slate-100 pt-5 mt-2">

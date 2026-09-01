@@ -81,6 +81,17 @@ export interface ItemLocacao {
   observacoes?: string | null;
 }
 
+export interface Pagamento {
+  id?: number;
+  locacaoId?: number;
+  forma: 'PIX' | 'DINHEIRO' | 'CHEQUE' | 'BOLETO' | 'TRANSFERENCIA';
+  valor: number;
+  status: 'PENDENTE' | 'RECEBIDO' | 'VENCIDO' | 'CANCELADO';
+  vencimento?: string | null;
+  recebidoEm?: string | null;
+  observacoes?: string | null;
+}
+
 export type StatusLocacao = 'AGENDADA' | 'CONFIRMADA' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'CANCELADA' | 'NO_SHOW';
 
 export interface Locacao {
@@ -108,9 +119,11 @@ export interface Locacao {
   criadoEm: string;
   atualizadoEm: string;
   itens: ItemLocacao[];
+  pagamentos?: Pagamento[];
 }
 
 export interface AuthResponse {
   usuario: Usuario;
   token: string;
 }
+

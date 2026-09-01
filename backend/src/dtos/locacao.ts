@@ -1,18 +1,39 @@
 import { z } from 'zod';
 
+const hora = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'HorÃ¡rio invÃ¡lido');
+const data = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data invÃ¡lida');
+
+const itemLocacaoSchema = z.object({
+  equipamentoId: z.coerce.number().int().positive(),
+  valorDiaria: z.coerce.number().nonnegative(),
+  valoresDisparo: z.record(z.coerce.number().nonnegative()).optional(),
+});
+
+const pagamentoSchema = z.object({
+  forma: z.enum(['PIX', 'DINHEIRO', 'CHEQUE', 'BOLETO', 'TRANSFERENCIA']),
+  valor: z.coerce.number().positive(),
+  status: z.enum(['PENDENTE', 'RECEBIDO', 'VENCIDO', 'CANCELADO']).default('PENDENTE'),
+  vencimento: data.optional().nullable(),
+  recebidoEm: data.optional().nullable(),
+  observacoes: z.string().max(1000).optional().nullable(),
+});
+
 export const locacaoSchema = z.object({
-  clinicaId: z.any().optional().nullable(),
-  dataInicio: z.any().optional().nullable(),
-  horaInicio: z.any().optional().nullable(),
-  horaFim: z.any().optional().nullable(),
-  enderecoLocacao: z.any().optional().nullable(),
-  cidadeLocacao: z.any().optional().nullable(),
-  tecnicoId: z.any().optional().nullable(),
-  motoristaId: z.any().optional().nullable(),
-  valorDesconto: z.any().optional().nullable(),
-  observacoes: z.any().optional().nullable(),
-  status: z.any().optional().nullable(),
-  itens: z.any().optional().nullable(),
+  clinicaId: z.coerce.number().int().positive(),
+  dataInicio: data,
+  dataFim: data.optional().nullable(),
+  horaInicio: hora.optional().nullable(),
+  horaFim: hora.optional().nullable(),
+  enderecoLocacao: z.string().max(500).optional().nullable(),
+  cidadeLocacao: z.string().max(120).optional().nullable(),
+  tecnicoId: z.coerce.number().int().positive().optional().nullable(),
+  motoristaId: z.coerce.number().int().positive().optional().nullable(),
+  valorDesconto: z.coerce.number().nonnegative().default(0),
+  observacoes: z.string().max(2000).optional().nullable(),
+  status: z.enum(['AGENDADA', 'CONFIRMADA', 'EM_ANDAMENTO', 'CONCLUIDA', 'CANCELADA', 'NO_SHOW']).default('AGENDADA'),
+  itens: z.array(itemLocacaoSchema).min(1),
+  pagamentos: z.array(pagamentoSchema).optional(),
 });
 
 export type LocacaoInput = z.infer<typeof locacaoSchema>;
+
