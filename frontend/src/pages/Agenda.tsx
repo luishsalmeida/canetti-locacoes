@@ -256,7 +256,7 @@ export const Agenda: React.FC = () => {
   const imprimirProtocolo = () => window.setTimeout(() => window.print(), 50);
 
   const enviarParaExcel = () => {
-    window.open('http://127.0.0.1:3334/sincronizar', '_blank', 'noopener,noreferrer');
+    window.open('http://127.0.0.1:3335/sincronizar', '_blank', 'noopener,noreferrer');
   };
 
   const handleDelete = async (id: number) => {
