@@ -30,6 +30,13 @@ const tiposDisparoDoEquipamento = (eq: Equipamento) => eq.tiposDisparo?.length
   ? eq.tiposDisparo
   : TIPOS_DISPARO[(eq.descricao || '').trim().toLowerCase()] || [];
 
+const disparoEhQuantidade = (eq: Equipamento) => /liftera|sylfirm/i.test(eq.descricao || '');
+
+const numeroDecimal = (valor: string) => {
+  const numero = Number(valor.replace(',', '.'));
+  return Number.isFinite(numero) ? numero : 0;
+};
+
 export const Agenda: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [locacoes, setLocacoes] = useState<Locacao[]>([]);
@@ -60,7 +67,7 @@ export const Agenda: React.FC = () => {
   const [motoristaId, setMotoristaId] = useState<string | number>('');
   const [itensLocacao, setItensLocacao] = useState<ItemAgendamento[]>([]);
   const [valorDesconto, setValorDesconto] = useState<number>(0);
-  const [formaPagamento, setFormaPagamento] = useState<'PIX' | 'DINHEIRO' | 'CHEQUE' | 'BOLETO' | 'TRANSFERENCIA'>('PIX');
+  const [formaPagamento, setFormaPagamento] = useState<'EMPRESA' | 'DR'>('EMPRESA');
   const [valorPagamento, setValorPagamento] = useState<number>(0);
   const [statusPagamento, setStatusPagamento] = useState<'PENDENTE' | 'RECEBIDO'>('PENDENTE');
   const [observacoes, setObservacoes] = useState('');
@@ -143,7 +150,7 @@ export const Agenda: React.FC = () => {
     setMotoristaId('');
     setItensLocacao([]);
     setValorDesconto(0);
-    setFormaPagamento('PIX');
+    setFormaPagamento('EMPRESA');
     setValorPagamento(0);
     setStatusPagamento('PENDENTE');
     setObservacoes('');
@@ -170,7 +177,7 @@ export const Agenda: React.FC = () => {
     );
     setValorDesconto(loc.valorDesconto || 0);
     const pagamento = loc.pagamentos?.[0];
-    setFormaPagamento(pagamento?.forma || 'PIX');
+    setFormaPagamento(pagamento?.forma === 'DR' ? 'DR' : 'EMPRESA');
     setValorPagamento(Number(pagamento?.valor || 0));
     setStatusPagamento(pagamento?.status === 'RECEBIDO' ? 'RECEBIDO' : 'PENDENTE');
     setObservacoes(loc.observacoes || '');
@@ -578,9 +585,12 @@ export const Agenda: React.FC = () => {
                             required
                           />
                           {tiposDisparoDoEquipamento(eq).map((tipo) => (
-                            <Input key={tipo}  
+                            <Input key={tipo}
+                              label={`${tipo} (${disparoEhQuantidade(eq) ? 'un.' : 'R$'})`}
+                              placeholder={disparoEhQuantidade(eq) ? 'Quantidade' : '0,00'}
+                              type="text" inputMode="decimal"
                               value={itemEncontrado.valoresDisparo?.[tipo] ?? ''}
-                              onChange={(e) => handleValorDisparoChange(eq.id, tipo, Number(e.target.value))} />
+                              onChange={(e) => handleValorDisparoChange(eq.id, tipo, numeroDecimal(e.target.value))} />
                           ))}
                         </div>
                       )}
@@ -617,9 +627,9 @@ export const Agenda: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Forma de Pagamento</label>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Recebido por</label>
               <select value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value as typeof formaPagamento)} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800">
-                <option value="PIX">PIX</option><option value="DINHEIRO">Dinheiro</option><option value="CHEQUE">Cheque</option><option value="BOLETO">Boleto</option><option value="TRANSFERENCIA">Transferencia</option>
+                <option value="EMPRESA">Empresa</option><option value="DR">Dr.</option>
               </select>
             </div>
             <Input label="Valor Recebido (R$)" type="number" step="0.01" value={valorPagamento} onChange={(e) => setValorPagamento(Number(e.target.value))} />
