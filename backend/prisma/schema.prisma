@@ -61,8 +61,8 @@ model Clinica {
   regiao          String?
   observacoes     String?
   status          String    @default("ATIVA")
-  limiteCredito   Decimal   @default(0) @db.Decimal(12, 2) @map("limite_credito")
-  saldoCredor     Decimal   @default(0) @db.Decimal(12, 2) @map("saldo_credor")
+  limiteCredito   Float     @default(0) @map("limite_credito")
+  saldoCredor     Float     @default(0) @map("saldo_credor")
   criadoEm        DateTime  @default(now()) @map("criado_em")
   atualizadoEm    DateTime  @updatedAt @map("atualizado_em")
 
@@ -93,9 +93,9 @@ model Equipamento {
   patrimonio      String?              @unique
   categoriaId     Int                  @map("categoria_id")
   unidade         String               @default("UN")
-  valorDiaria     Decimal              @default(0) @db.Decimal(12, 2) @map("valor_diaria")
-  valorSemanal    Decimal              @default(0) @db.Decimal(12, 2) @map("valor_semanal")
-  valorMensal     Decimal              @default(0) @db.Decimal(12, 2) @map("valor_mensal")
+  valorDiaria     Float                @default(0) @map("valor_diaria")
+  valorSemanal    Float                @default(0) @map("valor_semanal")
+  valorMensal     Float                @default(0) @map("valor_mensal")
   status          String               @default("DISPONIVEL")
   observacoes     String?
   criadoEm        DateTime             @default(now()) @map("criado_em")
@@ -121,9 +121,9 @@ model Locacao {
   cidadeLocacao     String?       @map("cidade_locacao")
   responsavel       String?
   telefoneResp      String?       @map("telefone_resp")
-  valorTotal        Decimal       @default(0) @db.Decimal(12, 2) @map("valor_total")
-  valorDesconto     Decimal       @default(0) @db.Decimal(12, 2) @map("valor_desconto")
-  valorFinal        Decimal       @default(0) @db.Decimal(12, 2) @map("valor_final")
+  valorTotal        Float         @default(0) @map("valor_total")
+  valorDesconto     Float         @default(0) @map("valor_desconto")
+  valorFinal        Float         @default(0) @map("valor_final")
   observacoes       String?
   status            String        @default("AGENDADA")
 
@@ -151,9 +151,9 @@ model ItemLocacao {
   id              Int         @id @default(autoincrement())
   locacaoId       Int         @map("locacao_id")
   equipamentoId   Int         @map("equipamento_id")
-  valorDiaria     Decimal     @db.Decimal(12, 2) @map("valor_diaria")
+  valorDiaria     Float       @map("valor_diaria")
   quantidade      Int         @default(1)
-  valorTotal      Decimal     @db.Decimal(12, 2) @map("valor_total")
+  valorTotal      Float       @map("valor_total")
   observacoes     String?
   valoresDisparo  Json?       @map("valores_disparo")
 
