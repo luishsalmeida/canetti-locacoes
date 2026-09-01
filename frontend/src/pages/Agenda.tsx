@@ -12,7 +12,7 @@ import protocoloLogo from '../assets/canetti-logo-transparent.png';
 interface ItemAgendamento {
   equipamentoId: number;
   valorDiaria: number;
-  valoresDisparo?: Record<string, number>;
+  valoresDisparo?: Record<string, number | string>;
 }
 
 const TIPOS_DISPARO: Record<string, string[]> = {
@@ -195,7 +195,7 @@ export const Agenda: React.FC = () => {
     }
   };
 
-  const handleValorDisparoChange = (equipamentoId: number, tipo: string, valor: number) => {
+  const handleValorDisparoChange = (equipamentoId: number, tipo: string, valor: string) => {
     setItensLocacao(itensLocacao.map((item) => item.equipamentoId === equipamentoId
       ? { ...item, valoresDisparo: { ...(item.valoresDisparo || {}), [tipo]: valor } }
       : item));
@@ -227,7 +227,12 @@ export const Agenda: React.FC = () => {
       cidadeLocacao,
       tecnicoId: tecnicoId ? Number(tecnicoId) : null,
       motoristaId: motoristaId ? Number(motoristaId) : null,
-      itens: itensLocacao,
+      itens: itensLocacao.map((item) => ({
+        ...item,
+        valoresDisparo: Object.fromEntries(
+          Object.entries(item.valoresDisparo || {}).map(([tipo, valor]) => [tipo, numeroDecimal(String(valor))])
+        ),
+      })),
       valorDesconto: Number(valorDesconto || 0),
       pagamentos: valorPagamento > 0 ? [{ forma: formaPagamento, valor: Number(valorPagamento), status: statusPagamento, recebidoEm: statusPagamento === 'RECEBIDO' ? dataInicio : null }] : [],
       observacoes,
@@ -590,7 +595,7 @@ export const Agenda: React.FC = () => {
                               placeholder={disparoEhQuantidade(eq) ? 'Quantidade' : '0,00'}
                               type="text" inputMode="decimal"
                               value={itemEncontrado.valoresDisparo?.[tipo] ?? ''}
-                              onChange={(e) => handleValorDisparoChange(eq.id, tipo, numeroDecimal(e.target.value))} />
+                              onChange={(e) => handleValorDisparoChange(eq.id, tipo, e.target.value)} />
                           ))}
                         </div>
                       )}
@@ -666,7 +671,7 @@ export const Agenda: React.FC = () => {
           <h1>PROTOCOLO DE ENTREGA E RETIRADA</h1>
           <div className="protocol-grid"><span><b>NUMERO:</b> {String(selectedLocacao.codigo || selectedLocacao.id).padStart(8, '0')}</span><span><b>DATA:</b> {dataProtocolo}</span><span><b>ENTREGA:</b> {horaInicio}</span><span><b>RETIRADA:</b> {horaFim}</span></div>
           <div className="protocol-client"><div><b>CLIENTE:</b> {selectedLocacao.clinica?.razaoSocial || selectedLocacao.clinica?.nomeFantasia || 'NAO INFORMADO'}<br/><b>ENDERECO:</b> {enderecoLocacao || 'NAO INFORMADO'}<br/><b>CIDADE / UF:</b> {cidadeLocacao || 'NAO INFORMADA'}</div><div><b>FONE:</b> {selectedLocacao.clinica?.telefone || selectedLocacao.clinica?.celular || '________________'}<br/><b>CPF/CNPJ:</b> {selectedLocacao.clinica?.cnpjCpf || '________________'}<br/><b>CONTATO:</b> {selectedLocacao.clinica?.contato || '________________'}</div></div>
-          <table className="protocol-table"><thead><tr><th>MODELO / APARELHO</th><th>VALOR DA LOCACAO</th><th>VALOR DOS DISPAROS</th></tr></thead><tbody>{itensLocacao.map((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return <tr key={item.equipamentoId}><td>{eq?.descricao || 'EQUIPAMENTO'}</td><td>R$ {Number(item.valorDiaria || 0).toFixed(2)}</td><td>{tipos.length ? tipos.map((tipo) => <div key={tipo}>{tipo}: R$ {Number(item.valoresDisparo?.[tipo] || 0).toFixed(2)}</div>) : 'NAO SE APLICA'}</td></tr>; })}</tbody></table>
+          <table className="protocol-table"><thead><tr><th>MODELO / APARELHO</th><th>VALOR DA LOCACAO</th><th>VALOR DOS DISPAROS</th></tr></thead><tbody>{itensLocacao.map((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return <tr key={item.equipamentoId}><td>{eq?.descricao || 'EQUIPAMENTO'}</td><td>R$ {Number(item.valorDiaria || 0).toFixed(2)}</td><td>{tipos.length ? tipos.map((tipo) => <div key={tipo}>{tipo}: {eq && disparoEhQuantidade(eq) ? `${numeroDecimal(String(item.valoresDisparo?.[tipo] || 0))} un.` : `R$ ${numeroDecimal(String(item.valoresDisparo?.[tipo] || 0)).toFixed(2)}`}</div>) : 'NAO SE APLICA'}</td></tr>; })}</tbody></table>
           <div className="protocol-split"><div className="protocol-box"><b>OCORRENCIAS:</b><br/>{selectedLocacao.observacoes || '_______________________________________________________________'}<br/>_______________________________________________________________</div><div className="protocol-box"><b>MATERIAIS CONFERIDOS:</b><br/>[ ] OCULOS &nbsp; [ ] PONTEIRA ET &nbsp; [ ] PONTEIRA HS<br/>[ ] TIP HS &nbsp; [ ] CABO &nbsp; [ ] PEDAL</div></div>
           <div className="protocol-box protocol-firing"><b>CONTROLE DE DISPAROS / HANDPIECES</b><table><thead><tr><th>TIPO</th><th>DIS. INICIAIS</th><th>DIS. FINAIS</th><th>DIFERENCA</th></tr></thead><tbody>{itensLocacao.flatMap((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return tipos.map((tipo) => <tr key={`${item.equipamentoId}-${tipo}`}><td>{tipo}</td><td></td><td></td><td></td></tr>); })}</tbody></table></div>
           <div className="protocol-money"><div><b>VALOR DA LOCACAO:</b> R$ {totalDiariasProtocolo.toFixed(2)}<br/><b>DESCONTO:</b> R$ {Number(valorDesconto || 0).toFixed(2)}</div><div><b>VALOR TOTAL (LOCACAO + DISPAROS):</b> R$ __________________<br/><b>FORMA DE PAGAMENTO:</b> [ ] PIX &nbsp; [ ] DINHEIRO &nbsp; [ ] CHEQUE &nbsp; [ ] BOLETO</div></div>
