@@ -4,7 +4,7 @@ import { Locacao, Clinica, Equipamento, Colaborador, StatusLocacao } from '../ty
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { Input } from '../components/Input';
-import { ChevronLeft, ChevronRight, Plus, Clock, Shield, Truck, Calendar as CalendarIcon, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock, Shield, Truck, Calendar as CalendarIcon, Search, SlidersHorizontal, X, FileSpreadsheet } from 'lucide-react';
 import { format, addMonths, subMonths, addWeeks, subWeeks, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import protocoloLogo from '../assets/canetti-logo-transparent.png';
@@ -255,6 +255,10 @@ export const Agenda: React.FC = () => {
 
   const imprimirProtocolo = () => window.setTimeout(() => window.print(), 50);
 
+  const enviarParaExcel = () => {
+    window.location.href = 'canetti-sync://agora';
+  };
+
   const handleDelete = async (id: number) => {
     if (confirm('Deseja realmente cancelar/deletar este agendamento?')) {
       try {
@@ -295,9 +299,14 @@ export const Agenda: React.FC = () => {
             <p className="text-sm font-medium text-slate-500">Gerenciamento diario de equipamentos e compromissos</p>
           </div>
         </div>
-        <Button onClick={() => handleOpenCreate()} leftIcon={<Plus className="w-4 h-4" />}>
-          Novo Agendamento
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={enviarParaExcel} leftIcon={<FileSpreadsheet className="w-4 h-4" />}>
+            Enviar para Excel
+          </Button>
+          <Button onClick={() => handleOpenCreate()} leftIcon={<Plus className="w-4 h-4" />}>
+            Novo Agendamento
+          </Button>
+        </div>
       </div>
 
       {/* Busca, filtros e periodo */}
