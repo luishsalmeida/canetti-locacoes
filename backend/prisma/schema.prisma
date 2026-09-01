@@ -18,6 +18,7 @@ model Usuario {
   atualizadoEm DateTime  @updatedAt @map("atualizado_em")
 
   locacoes     Locacao[]
+  auditorias   Auditoria[]
 
   @@map("usuarios")
 }
@@ -60,8 +61,8 @@ model Clinica {
   regiao          String?
   observacoes     String?
   status          String    @default("ATIVA")
-  limiteCredito   Float     @default(0) @map("limite_credito")
-  saldoCredor     Float     @default(0) @map("saldo_credor")
+  limiteCredito   Decimal   @default(0) @db.Decimal(12, 2) @map("limite_credito")
+  saldoCredor     Decimal   @default(0) @db.Decimal(12, 2) @map("saldo_credor")
   criadoEm        DateTime  @default(now()) @map("criado_em")
   atualizadoEm    DateTime  @updatedAt @map("atualizado_em")
 
@@ -92,9 +93,9 @@ model Equipamento {
   patrimonio      String?              @unique
   categoriaId     Int                  @map("categoria_id")
   unidade         String               @default("UN")
-  valorDiaria     Float                @default(0) @map("valor_diaria")
-  valorSemanal    Float                @default(0) @map("valor_semanal")
-  valorMensal     Float                @default(0) @map("valor_mensal")
+  valorDiaria     Decimal              @default(0) @db.Decimal(12, 2) @map("valor_diaria")
+  valorSemanal    Decimal              @default(0) @db.Decimal(12, 2) @map("valor_semanal")
+  valorMensal     Decimal              @default(0) @db.Decimal(12, 2) @map("valor_mensal")
   status          String               @default("DISPONIVEL")
   observacoes     String?
   criadoEm        DateTime             @default(now()) @map("criado_em")
@@ -120,9 +121,9 @@ model Locacao {
   cidadeLocacao     String?       @map("cidade_locacao")
   responsavel       String?
   telefoneResp      String?       @map("telefone_resp")
-  valorTotal        Float         @default(0) @map("valor_total")
-  valorDesconto     Float         @default(0) @map("valor_desconto")
-  valorFinal        Float         @default(0) @map("valor_final")
+  valorTotal        Decimal       @default(0) @db.Decimal(12, 2) @map("valor_total")
+  valorDesconto     Decimal       @default(0) @db.Decimal(12, 2) @map("valor_desconto")
+  valorFinal        Decimal       @default(0) @db.Decimal(12, 2) @map("valor_final")
   observacoes       String?
   status            String        @default("AGENDADA")
 
@@ -138,6 +139,7 @@ model Locacao {
   motorista         Colaborador?  @relation("MotoristaRel", fields: [motoristaId], references: [id])
   criadoPor         Usuario?      @relation(fields: [criadoPorId], references: [id])
   itens             ItemLocacao[]
+  pagamentos        Pagamento[]
 
   @@index([clinicaId])
   @@index([dataInicio])
@@ -149,9 +151,9 @@ model ItemLocacao {
   id              Int         @id @default(autoincrement())
   locacaoId       Int         @map("locacao_id")
   equipamentoId   Int         @map("equipamento_id")
-  valorDiaria     Float       @map("valor_diaria")
+  valorDiaria     Decimal     @db.Decimal(12, 2) @map("valor_diaria")
   quantidade      Int         @default(1)
-  valorTotal      Float       @map("valor_total")
+  valorTotal      Decimal     @db.Decimal(12, 2) @map("valor_total")
   observacoes     String?
   valoresDisparo  Json?       @map("valores_disparo")
 
@@ -163,6 +165,44 @@ model ItemLocacao {
   @@map("itens_locacao")
 }
 
+model Pagamento {
+  id           Int      @id @default(autoincrement())
+  locacaoId    Int      @map("locacao_id")
+  forma        String
+  valor        Decimal  @db.Decimal(12, 2)
+  status       String   @default("PENDENTE")
+  vencimento   DateTime?
+  recebidoEm   DateTime? @map("recebido_em")
+  observacoes  String?
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  locacao      Locacao @relation(fields: [locacaoId], references: [id], onDelete: Cascade)
+
+  @@index([locacaoId])
+  @@index([status])
+  @@map("pagamentos")
+}
+
+model Auditoria {
+  id           Int      @id @default(autoincrement())
+  usuarioId    Int?     @map("usuario_id")
+  entidade     String
+  entidadeId   Int?     @map("entidade_id")
+  acao         String
+  dadosAntes   Json?    @map("dados_antes")
+  dadosDepois  Json?    @map("dados_depois")
+  ip           String?
+  criadoEm     DateTime @default(now()) @map("criado_em")
+
+  usuario      Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([entidade, entidadeId])
+  @@index([usuarioId])
+  @@index([criadoEm])
+  @@map("auditorias")
+}
+
 model Configuracao {
   id           Int      @id @default(autoincrement())
   chave        String   @unique
@@ -172,3 +212,4 @@ model Configuracao {
 
   @@map("configuracoes")
 }
+
