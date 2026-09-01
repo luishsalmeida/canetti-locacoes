@@ -20,7 +20,10 @@ const TIPOS_DISPARO: Record<string, string[]> = {
   m22: ['Disparo Normal'],
   ultraformer: ['Disparo Normal'],
   'ultraformer iii': ['Disparo Normal'],
+  liftera: ['Disparo Linear', 'Disparo Caneta'],
   'liftera 2': ['Disparo Linear', 'Disparo Caneta'],
+  sylfirm: ['Agulhas usadas'],
+  'sylfirm x': ['Agulhas usadas'],
 };
 
 const tiposDisparoDoEquipamento = (eq: Equipamento) => eq.tiposDisparo?.length
@@ -575,7 +578,7 @@ export const Agenda: React.FC = () => {
                             required
                           />
                           {tiposDisparoDoEquipamento(eq).map((tipo) => (
-                            <Input key={tipo} label="" placeholder={`${tipo} R$`} type="number" step="0.01"
+                            <Input key={tipo} label={`${tipo} (un.)`} placeholder="Quantidade" type="number" min="0" step="1"
                               value={itemEncontrado.valoresDisparo?.[tipo] ?? ''}
                               onChange={(e) => handleValorDisparoChange(eq.id, tipo, Number(e.target.value))} />
                           ))}
