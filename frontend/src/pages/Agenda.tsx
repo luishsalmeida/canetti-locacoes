@@ -578,7 +578,7 @@ export const Agenda: React.FC = () => {
                             required
                           />
                           {tiposDisparoDoEquipamento(eq).map((tipo) => (
-                            <Input key={tipo} label={`${tipo} (un.)`} placeholder="Quantidade" type="number" min="0" 
+                            <Input key={tipo} label={`${tipo} (un.)`} placeholder="Quantidade" type="number" 
                               value={itemEncontrado.valoresDisparo?.[tipo] ?? ''}
                               onChange={(e) => handleValorDisparoChange(eq.id, tipo, Number(e.target.value))} />
                           ))}
