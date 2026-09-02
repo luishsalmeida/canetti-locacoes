@@ -62,9 +62,9 @@ try {
       $html = @'
 <!doctype html><meta charset="utf-8"><title>Canetti Excel</title>
 <style>body{font:18px Arial;padding:40px;background:#f8fafc;color:#172033}.box{max-width:650px;margin:auto;background:white;padding:32px;border-radius:18px;box-shadow:0 8px 30px #0002}h1{color:#4f46e5}.status{padding:18px;background:#eef2ff;border-radius:12px;white-space:pre-wrap}</style>
-<div class="box"><h1>Enviando para o Excel</h1><div id="status" class="status">Executando sincronizacao...</div><p>A pagina atualiza automaticamente. Nao clique novamente.</p></div>
+<div class="box"><h1 id="titulo">Enviando para o Excel</h1><div id="status" class="status">Executando sincronizacao...</div><p id="orientacao">A pagina atualiza automaticamente. Nao clique novamente.</p></div>
 <script>
-async function atualizar(){try{const texto=await fetch('/resultado?'+Date.now()).then(r=>r.text());document.getElementById('status').textContent=texto;if(!texto.startsWith('Executando'))clearInterval(timer)}catch(e){document.getElementById('status').textContent='Aguardando o sincronizador local...' }}
+async function atualizar(){try{const texto=await fetch('/resultado?'+Date.now()).then(r=>r.text());document.getElementById('status').textContent=texto;if(!texto.startsWith('Executando')){clearInterval(timer);const sucesso=texto.startsWith('Sincronizacao concluida');document.getElementById('titulo').textContent=sucesso?'Concluido':'Atencao';document.getElementById('orientacao').textContent=sucesso?'Esta aba sera fechada automaticamente.':'Corrija o problema informado e tente novamente.';if(sucesso)setTimeout(()=>window.close(),2500)}}catch(e){document.getElementById('status').textContent='Aguardando o sincronizador local...' }}
 const timer=setInterval(atualizar,1500);atualizar();
 </script>
 '@
