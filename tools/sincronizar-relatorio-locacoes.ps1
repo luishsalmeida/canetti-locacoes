@@ -114,6 +114,15 @@ if (-not $arquivo) { throw 'O arquivo de relatorio de locacoes 2026 nao foi enco
 # UTF-16 includes a byte-order mark, so Windows PowerShell reads accented paths correctly.
 Set-Content -LiteralPath (Join-Path $configDir 'report-path.txt') -Value $arquivo.FullName -Encoding Unicode
 
+$reportStream = $null
+try {
+  $reportStream = [System.IO.File]::Open($arquivo.FullName, 'Open', 'ReadWrite', 'None')
+} catch {
+  throw 'Feche o arquivo do Excel antes de enviar os dados e tente novamente.'
+} finally {
+  if ($reportStream) { $reportStream.Dispose() }
+}
+
 $resposta = Invoke-RestMethod -Uri "$($ApiUrl.TrimEnd('/'))/relatorios/locacoes-concluidas" -Headers @{ 'x-report-sync-key' = $ReportSyncKey }
 $locacoes = @($resposta.locacoes)
 
