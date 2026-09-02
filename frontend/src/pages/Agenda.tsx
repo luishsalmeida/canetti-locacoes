@@ -643,7 +643,7 @@ export const Agenda: React.FC = () => {
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Recebido por</label>
               <select value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value as typeof formaPagamento)} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800">
-                <option value="EMPRESA">Empresa</option><option value="DR">Dr.</option>
+                <option value="EMPRESA">Empresa</option><option value="DR">Dr Ricardo</option>
               </select>
             </div>
             <Input label="Valor Recebido (R$)" type="number" step="0.01" value={valorPagamento} onChange={(e) => setValorPagamento(Number(e.target.value))} />
