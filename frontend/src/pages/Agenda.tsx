@@ -301,6 +301,13 @@ export const Agenda: React.FC = () => {
     : format(currentDate, 'MMMM yyyy', { locale: ptBR });
   const dataProtocolo = dataInicio ? dataInicio.split('-').reverse().join('/') : '';
   const totalDiariasProtocolo = itensLocacao.reduce((sum, item) => sum + Number(item.valorDiaria || 0), 0);
+  const equipamentoDoItem = (equipamentoId: number) => selectedLocacao?.itens.find((item) => item.equipamentoId === equipamentoId)?.equipamento
+    || equipamentos.find((equipamento) => equipamento.id === equipamentoId);
+  const responsavelRelacionado = acessoRestrito
+    ? usuario?.colaboradorFuncao === 'MOTORISTA'
+      ? { titulo: 'Técnica responsável', nome: selectedLocacao?.tecnico?.nome || 'Não informado' }
+      : { titulo: 'Motorista responsável', nome: selectedLocacao?.motorista?.nome || 'Não informado' }
+    : null;
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-[1600px] mx-auto w-full">
@@ -434,8 +441,16 @@ export const Agenda: React.FC = () => {
                 <div className="flex flex-col gap-2 overflow-y-auto max-h-[240px]">
                   {locacoesDoDia.map((loc) => {
                     const nomeClinica = loc.clinica ? (loc.clinica.nomeFantasia || loc.clinica.razaoSocial) : 'Clinica';
-                    const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nao informada';
-                    const equipamentosStr = loc.itens && loc.itens.map((i) => i.equipamento?.descricao).filter(Boolean).join(', ') || 'Nenhum aparelho';
+                   const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nao informada';
+                   const equipamentosStr = loc.itens && loc.itens.map((i) => i.equipamento?.descricao).filter(Boolean).join(', ') || 'Nenhum aparelho';
+                    const valorLocacao = (loc.itens || []).reduce((total, item) => total + Number(item.valorDiaria || 0), 0);
+                    const disparos = (loc.itens || []).flatMap((item) => Object.entries(item.valoresDisparo || {})
+                      .filter(([, valor]) => numeroDecimal(String(valor)) > 0)
+                      .map(([tipo, valor]) => {
+                        const quantidade = item.equipamento && disparoEhQuantidade(item.equipamento);
+                        const valorFormatado = quantidade ? `${numeroDecimal(String(valor))} un.` : `R$ ${numeroDecimal(String(valor)).toFixed(2)}`;
+                        return `${tipo}: ${valorFormatado}`;
+                      }));
                     return (
                       <div
                         key={loc.id}
@@ -448,10 +463,12 @@ export const Agenda: React.FC = () => {
                         <div className="text-[11px] font-semibold text-slate-500 truncate" title={cidadeClinica}>
                           {cidadeClinica}
                         </div>
-                        <div className="text-[11px] font-black text-indigo-600 truncate bg-white px-2 py-1 rounded-lg border border-indigo-100/50 mt-0.5" title={equipamentosStr}>
-                          {equipamentosStr}
-                        </div>
-                      </div>
+                         <div className="text-[11px] font-black text-indigo-600 truncate bg-white px-2 py-1 rounded-lg border border-indigo-100/50 mt-0.5" title={equipamentosStr}>
+                           {equipamentosStr}
+                         </div>
+                         {acessoRestrito && <div className="text-[11px] font-bold text-slate-700 mt-0.5">Locação: R$ {valorLocacao.toFixed(2)}</div>}
+                         {acessoRestrito && disparos.length > 0 && <div className="text-[10px] font-medium text-slate-500 leading-snug">Disparos: {disparos.join(' · ')}</div>}
+                       </div>
                     );
                   })}
                   {locacoesDoDia.length === 0 && (
@@ -480,10 +497,11 @@ export const Agenda: React.FC = () => {
               <div className="rounded-xl bg-slate-50 border border-slate-100 p-4"><span className="block text-xs font-bold uppercase text-slate-400 mb-1">Data e horário</span><b className="text-slate-800">{format(new Date(`${selectedLocacao.dataInicio.split('T')[0]}T12:00:00`), 'dd/MM/yyyy')} · {selectedLocacao.horaInicio || '--:--'} à {selectedLocacao.horaFim || '--:--'}</b></div>
               <div className="rounded-xl bg-slate-50 border border-slate-100 p-4"><span className="block text-xs font-bold uppercase text-slate-400 mb-1">Endereço</span><b className="text-slate-800">{selectedLocacao.enderecoLocacao || 'Não informado'}</b><span className="block text-slate-600 mt-1">{selectedLocacao.cidadeLocacao || selectedLocacao.clinica?.cidade || ''}</span></div>
               <div className="rounded-xl bg-slate-50 border border-slate-100 p-4"><span className="block text-xs font-bold uppercase text-slate-400 mb-1">Status</span><b className="text-slate-800">{selectedLocacao.status.replaceAll('_', ' ')}</b></div>
+              {responsavelRelacionado && <div className="rounded-xl bg-slate-50 border border-slate-100 p-4"><span className="block text-xs font-bold uppercase text-slate-400 mb-1">{responsavelRelacionado.titulo}</span><b className="text-slate-800">{responsavelRelacionado.nome}</b></div>}
             </div>
             <div className="rounded-xl border border-slate-100 p-4"><span className="block text-xs font-bold uppercase text-slate-400 mb-2">Aparelho(s)</span><div className="flex flex-col gap-2">{selectedLocacao.itens.map((item) => <b key={item.id} className="text-slate-800">{item.equipamento?.descricao}</b>)}</div></div>
             {selectedLocacao.observacoes && <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-700"><span className="block text-xs font-bold uppercase text-slate-400 mb-1">Observações</span>{selectedLocacao.observacoes}</div>}
-            <div className="flex justify-end border-t border-slate-100 pt-4"><Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Fechar</Button></div>
+            <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">{usuario?.colaboradorFuncao === 'MOTORISTA' && <Button type="button" variant="outline" onClick={imprimirProtocolo}>Imprimir protocolo / PDF</Button>}<Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Fechar</Button></div>
           </div>
         ) : <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -697,15 +715,15 @@ export const Agenda: React.FC = () => {
           </div>
         </form>}
       </Modal>
-      {!acessoRestrito && selectedLocacao && (
+      {(!acessoRestrito || usuario?.colaboradorFuncao === 'MOTORISTA') && selectedLocacao && (
         <section className="print-protocol" aria-hidden="true">
           <header className="protocol-header"><img src={protocoloLogo} alt="Canetti"/><span>Rua Angelo Cisotto, 86 - Cerquilho/SP<br/>CEP 18520-000 - Cerquilho/SP<br/>Fones: (015) 3284-4278 / 3384-3630<br/>canetti.locacao@hotmail.com</span></header>
           <h1>PROTOCOLO DE ENTREGA E RETIRADA</h1>
           <div className="protocol-grid"><span><b>NUMERO:</b> {String(selectedLocacao.codigo || selectedLocacao.id).padStart(8, '0')}</span><span><b>DATA:</b> {dataProtocolo}</span><span><b>ENTREGA:</b> {horaInicio}</span><span><b>RETIRADA:</b> {horaFim}</span></div>
           <div className="protocol-client"><div><b>CLIENTE:</b> {selectedLocacao.clinica?.razaoSocial || selectedLocacao.clinica?.nomeFantasia || 'NAO INFORMADO'}<br/><b>ENDERECO:</b> {enderecoLocacao || 'NAO INFORMADO'}<br/><b>CIDADE / UF:</b> {cidadeLocacao || 'NAO INFORMADA'}</div><div><b>FONE:</b> {selectedLocacao.clinica?.telefone || selectedLocacao.clinica?.celular || '________________'}<br/><b>CPF/CNPJ:</b> {selectedLocacao.clinica?.cnpjCpf || '________________'}</div></div>
-          <table className="protocol-table"><thead><tr><th>MODELO / APARELHO</th><th>VALOR DA LOCACAO</th><th>VALOR DOS DISPAROS</th></tr></thead><tbody>{itensLocacao.map((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return <tr key={item.equipamentoId}><td>{eq?.descricao || 'EQUIPAMENTO'}</td><td>R$ {Number(item.valorDiaria || 0).toFixed(2)}</td><td>{tipos.length ? tipos.map((tipo) => <div key={tipo}>{tipo}: {eq && disparoEhQuantidade(eq) ? `${numeroDecimal(String(item.valoresDisparo?.[tipo] || 0))} un.` : `R$ ${numeroDecimal(String(item.valoresDisparo?.[tipo] || 0)).toFixed(2)}`}</div>) : 'NAO SE APLICA'}</td></tr>; })}</tbody></table>
+          <table className="protocol-table"><thead><tr><th>MODELO / APARELHO</th><th>VALOR DA LOCACAO</th><th>VALOR DOS DISPAROS</th></tr></thead><tbody>{itensLocacao.map((item) => { const eq = equipamentoDoItem(item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return <tr key={item.equipamentoId}><td>{eq?.descricao || 'EQUIPAMENTO'}</td><td>R$ {Number(item.valorDiaria || 0).toFixed(2)}</td><td>{tipos.length ? tipos.map((tipo) => <div key={tipo}>{tipo}: {eq && disparoEhQuantidade(eq) ? `${numeroDecimal(String(item.valoresDisparo?.[tipo] || 0))} un.` : `R$ ${numeroDecimal(String(item.valoresDisparo?.[tipo] || 0)).toFixed(2)}`}</div>) : 'NAO SE APLICA'}</td></tr>; })}</tbody></table>
           <div className="protocol-split"><div className="protocol-box"><b>OCORRENCIAS:</b><br/>{selectedLocacao.observacoes || '_______________________________________________________________'}<br/>_______________________________________________________________</div><div className="protocol-box"><b>MATERIAIS CONFERIDOS:</b><br/>[ ] OCULOS &nbsp; [ ] PONTEIRA ET &nbsp; [ ] PONTEIRA HS<br/>[ ] TIP HS &nbsp; [ ] CABO &nbsp; [ ] PEDAL</div></div>
-          <div className="protocol-box protocol-firing"><b>CONTROLE DE DISPAROS / HANDPIECES</b><table><thead><tr><th>TIPO</th><th>DIS. INICIAIS</th><th>DIS. FINAIS</th><th>DIFERENCA</th></tr></thead><tbody>{itensLocacao.flatMap((item) => { const eq = equipamentos.find((e) => e.id === item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return tipos.map((tipo) => <tr key={`${item.equipamentoId}-${tipo}`}><td>{tipo}</td><td></td><td></td><td></td></tr>); })}</tbody></table></div>
+          <div className="protocol-box protocol-firing"><b>CONTROLE DE DISPAROS / HANDPIECES</b><table><thead><tr><th>TIPO</th><th>DIS. INICIAIS</th><th>DIS. FINAIS</th><th>DIFERENCA</th></tr></thead><tbody>{itensLocacao.flatMap((item) => { const eq = equipamentoDoItem(item.equipamentoId); const tipos = eq ? tiposDisparoDoEquipamento(eq) : []; return tipos.map((tipo) => <tr key={`${item.equipamentoId}-${tipo}`}><td>{tipo}</td><td></td><td></td><td></td></tr>); })}</tbody></table></div>
           <div className="protocol-money"><div><b>VALOR DA LOCACAO:</b> R$ {totalDiariasProtocolo.toFixed(2)}<br/><b>DESCONTO:</b> R$ {Number(valorDesconto || 0).toFixed(2)}</div><div><b>VALOR TOTAL (LOCACAO + DISPAROS):</b> R$ __________________<br/><b>FORMA DE PAGAMENTO:</b> [ ] PIX &nbsp; [ ] DINHEIRO &nbsp; [ ] CHEQUE &nbsp; [ ] BOLETO</div></div>
           <p className="protocol-sign">Declaro que recebi e conferi o equipamento e os materiais assinalados, e que os handpieces nao estao com os cristais danificados.</p>
           <p className="protocol-freelancer">DECLARO PARA OS FINS DE DIREITO QUE CONTRATEI OS SERVICOS DE <b>{selectedLocacao.tecnico?.nome || '________________________________'}</b>, NA FUNCAO DE TECNICA DE ESTETICA, COMO FREELANCER, COM A FINALIDADE DE OPERAR O EQUIPAMENTO DE ESTETICA LOCADO NESTA DATA, CUJO VALOR PELO SERVICO CONTRATADO CORRERA EXCLUSIVAMENTE SOB A RESPONSABILIDADE DA LOCATARIA.</p>
