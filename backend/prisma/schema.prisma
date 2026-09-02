@@ -13,7 +13,7 @@ model Usuario {
   login        String    @unique @map("login")
   senha        String    @map("senha")
   perfil       String    @default("OPERADOR")
-  colaboradorId Int?     @unique @map("colaborador_id")
+  colaboradorId Int?     @map("colaborador_id")
   ativo        Boolean   @default(true)
   criadoEm     DateTime  @default(now()) @map("criado_em")
   atualizadoEm DateTime  @updatedAt @map("atualizado_em")
@@ -37,7 +37,7 @@ model Colaborador {
 
   locacoesTecnico Locacao[] @relation("TecnicoRel")
   locacoesMotorista Locacao[] @relation("MotoristaRel")
-  usuarioAcesso Usuario?
+  usuariosAcesso Usuario[]
 
   @@map("colaboradores")
 }

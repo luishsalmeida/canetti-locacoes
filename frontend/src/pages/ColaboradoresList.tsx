@@ -219,8 +219,8 @@ export const ColaboradoresList: React.FC = () => {
                 {col.telefone && <div>Telefone: <span className="font-medium text-slate-800">{col.telefone}</span></div>}
               </div>
               {usuario?.perfil === 'ADMIN' && (
-                col.usuarioAcesso ? (
-                  <div className="rounded-xl bg-emerald-50 text-emerald-700 px-3 py-2 text-xs font-bold">Acesso ativo: {col.usuarioAcesso.login}</div>
+                col.usuariosAcesso?.[0] ? (
+                  <div className="rounded-xl bg-emerald-50 text-emerald-700 px-3 py-2 text-xs font-bold">Acesso ativo: {col.usuariosAcesso[0].login}</div>
                 ) : (
                   <Button variant="outline" onClick={() => handleOpenAcesso(col)}>Criar acesso à agenda</Button>
                 )

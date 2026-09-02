@@ -13,11 +13,11 @@ export interface Colaborador {
   funcao: 'TECNICO' | 'MOTORISTA';
   telefone?: string | null;
   ativo: boolean;
-  usuarioAcesso?: {
+  usuariosAcesso?: Array<{
     id: number;
     login: string;
     ativo: boolean;
-  } | null;
+  }>;
 }
 
 export interface Clinica {

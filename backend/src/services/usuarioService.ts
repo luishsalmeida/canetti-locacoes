@@ -5,11 +5,11 @@ import { AcessoColaboradorInput } from '../dtos/usuario';
 export async function criarAcessoColaborador(data: AcessoColaboradorInput) {
   const colaborador = await prisma.colaborador.findFirst({
     where: { id: data.colaboradorId, ativo: true },
-    include: { usuarioAcesso: true },
+    include: { usuariosAcesso: true },
   });
 
   if (!colaborador) throw new Error('Colaborador não encontrado ou inativo');
-  if (colaborador.usuarioAcesso) throw new Error('Este colaborador já possui um acesso criado');
+  if (colaborador.usuariosAcesso.length > 0) throw new Error('Este colaborador já possui um acesso criado');
 
   const senha = await bcrypt.hash(data.senha, 12);
   return prisma.usuario.create({

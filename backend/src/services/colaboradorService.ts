@@ -22,8 +22,9 @@ export async function getColaboradores(filtros: { funcao?: string; search?: stri
     where,
     orderBy: { nome: 'asc' },
     include: {
-      usuarioAcesso: {
+      usuariosAcesso: {
         select: { id: true, login: true, ativo: true },
+        take: 1,
       },
     },
   });
