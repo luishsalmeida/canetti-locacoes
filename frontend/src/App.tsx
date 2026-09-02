@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { Login } from './pages/Login';
 import { Agenda } from './pages/Agenda';
@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const { autenticado, usuario, logout, carregando } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const location = useLocation();
+  const acessoRestrito = usuario?.perfil === 'COLABORADOR';
 
   if (carregando) {
     return (
@@ -33,7 +34,7 @@ const App: React.FC = () => {
     { label: 'Aparelhos', path: '/equipamentos', icon: Cpu },
     { label: 'Colaboradores', path: '/colaboradores', icon: Users },
     { label: 'Relatórios', path: '/relatorios', icon: BarChart3 },
-  ];
+  ].filter((item) => !acessoRestrito || item.path === '/');
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col lg:flex-row">
@@ -100,10 +101,11 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto">
         <Routes>
           <Route path="/" element={<Agenda />} />
-          <Route path="/clinicas" element={<ClinicasList />} />
-          <Route path="/equipamentos" element={<EquipamentosList />} />
-          <Route path="/colaboradores" element={<ColaboradoresList />} />
-          <Route path="/relatorios" element={<Relatorios />} />
+          <Route path="/clinicas" element={acessoRestrito ? <Navigate to="/" replace /> : <ClinicasList />} />
+          <Route path="/equipamentos" element={acessoRestrito ? <Navigate to="/" replace /> : <EquipamentosList />} />
+          <Route path="/colaboradores" element={acessoRestrito ? <Navigate to="/" replace /> : <ColaboradoresList />} />
+          <Route path="/relatorios" element={acessoRestrito ? <Navigate to="/" replace /> : <Relatorios />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
