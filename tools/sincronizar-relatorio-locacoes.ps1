@@ -185,7 +185,11 @@ try {
       Write-TextCell $vendas $row 5 (([string]$vendas.Cells.Item($row, 5).Value2) -replace '\s*-\s*[A-Za-z]{2}\s*$', '')
       $recebedorAnterior = ([string]$vendas.Cells.Item($row, 15).Value2).ToUpperInvariant()
       if ($recebedorAnterior -eq 'EMPRESA') { Write-TextCell $vendas $row 14 'Empresa' }
-      if ($recebedorAnterior -eq 'DR') { Write-TextCell $vendas $row 14 'Dr.' }
+      if ($recebedorAnterior -eq 'DR') { Write-TextCell $vendas $row 14 'Dr Ricardo' }
+      $recebedorAtual = ([string]$vendas.Cells.Item($row, 14).Value2).Trim()
+      if ($recebedorAtual -match '^Dr\.?$' -or $recebedorAtual -match '^Dr\.?\s+Ricardo$') {
+        Write-TextCell $vendas $row 14 'Dr Ricardo'
+      }
       Write-TextCell $vendas $row 15 ''
     }
   }
@@ -194,7 +198,7 @@ try {
   foreach ($locacao in $locacoes) {
     $dataLocacao = [datetime]$locacao.dataInicio
     $recebedores = @($locacao.pagamentos | ForEach-Object {
-      if ($_.forma -eq 'EMPRESA') { 'Empresa' } elseif ($_.forma -eq 'DR') { 'Dr.' }
+      if ($_.forma -eq 'EMPRESA') { 'Empresa' } elseif ($_.forma -eq 'DR') { 'Dr Ricardo' }
     } | Where-Object { $_ } | Select-Object -Unique) -join ' | '
     foreach ($item in @($locacao.itens)) {
       $maquina = [string]$item.equipamento.descricao
