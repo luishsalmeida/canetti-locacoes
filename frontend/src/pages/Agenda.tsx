@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, Plus, Clock, Shield, Truck, Calendar as Cale
 import { format, addMonths, subMonths, addWeeks, subWeeks, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import protocoloLogo from '../assets/canetti-logo-transparent.png';
+import { useAuth } from '../context/AuthContext';
 
 interface ItemAgendamento {
   equipamentoId: number;
@@ -38,6 +39,8 @@ const numeroDecimal = (valor: string) => {
 };
 
 export const Agenda: React.FC = () => {
+  const { usuario } = useAuth();
+  const acessoRestrito = usuario?.perfil === 'COLABORADOR';
   const [currentDate, setCurrentDate] = useState(new Date());
   const [locacoes, setLocacoes] = useState<Locacao[]>([]);
   const [clinicas, setClinicas] = useState<Clinica[]>([]);
@@ -94,19 +97,28 @@ export const Agenda: React.FC = () => {
       if (filtroMotoristaId) parametros.set('motoristaId', filtroMotoristaId);
       if (filtroStatus) parametros.set('status', filtroStatus);
 
-      const [resLoc, resCli, resEq, resTec, resMot] = await Promise.all([
-        api.get<Locacao[]>(`/locacoes?${parametros.toString()}`).catch(() => []),
-        api.get<Clinica[]>('/clinicas').catch(() => []),
-        api.get<Equipamento[]>('/equipamentos').catch(() => []),
-        api.get<Colaborador[]>('/colaboradores?funcao=TECNICO').catch(() => []),
-        api.get<Colaborador[]>('/colaboradores?funcao=MOTORISTA').catch(() => []),
-      ]);
+      if (acessoRestrito) {
+        const resLoc = await api.get<Locacao[]>(`/locacoes?${parametros.toString()}`).catch(() => []);
+        setLocacoes(Array.isArray(resLoc) ? resLoc : []);
+        setClinicas([]);
+        setEquipamentos([]);
+        setTecnicos([]);
+        setMotoristas([]);
+      } else {
+        const [resLoc, resCli, resEq, resTec, resMot] = await Promise.all([
+          api.get<Locacao[]>(`/locacoes?${parametros.toString()}`).catch(() => []),
+          api.get<Clinica[]>('/clinicas').catch(() => []),
+          api.get<Equipamento[]>('/equipamentos').catch(() => []),
+          api.get<Colaborador[]>('/colaboradores?funcao=TECNICO').catch(() => []),
+          api.get<Colaborador[]>('/colaboradores?funcao=MOTORISTA').catch(() => []),
+        ]);
 
-      setLocacoes(Array.isArray(resLoc) ? resLoc : []);
-      setClinicas(Array.isArray(resCli) ? resCli : []);
-      setEquipamentos(Array.isArray(resEq) ? resEq : []);
-      setTecnicos(Array.isArray(resTec) ? resTec : []);
-      setMotoristas(Array.isArray(resMot) ? resMot : []);
+        setLocacoes(Array.isArray(resLoc) ? resLoc : []);
+        setClinicas(Array.isArray(resCli) ? resCli : []);
+        setEquipamentos(Array.isArray(resEq) ? resEq : []);
+        setTecnicos(Array.isArray(resTec) ? resTec : []);
+        setMotoristas(Array.isArray(resMot) ? resMot : []);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -116,7 +128,7 @@ export const Agenda: React.FC = () => {
 
   useEffect(() => {
     carregarDados();
-  }, [currentDate, modoVisualizacao, busca, filtroEquipamentoId, filtroTecnicoId, filtroMotoristaId, filtroStatus]);
+  }, [currentDate, modoVisualizacao, busca, filtroEquipamentoId, filtroTecnicoId, filtroMotoristaId, filtroStatus, acessoRestrito]);
 
   const handleClinicaChange = (idStr: string) => {
     const id = idStr ? Number(idStr) : '';
@@ -139,6 +151,7 @@ export const Agenda: React.FC = () => {
   };
 
   const handleOpenCreate = (dateStr?: string) => {
+    if (acessoRestrito) return;
     setSelectedLocacao(null);
     setClinicaId('');
     setDataInicio(dateStr || format(new Date(), 'yyyy-MM-dd'));
@@ -209,6 +222,7 @@ export const Agenda: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (acessoRestrito) return;
     if (!clinicaId) {
       alert('Selecione uma clinica.');
       return;
@@ -256,10 +270,12 @@ export const Agenda: React.FC = () => {
   const imprimirProtocolo = () => window.setTimeout(() => window.print(), 50);
 
   const enviarParaExcel = () => {
+    if (acessoRestrito) return;
     window.open('http://127.0.0.1:3335/sincronizar', '_blank', 'noopener,noreferrer');
   };
 
   const handleDelete = async (id: number) => {
+    if (acessoRestrito) return;
     if (confirm('Deseja realmente cancelar/deletar este agendamento?')) {
       try {
         await api.delete(`/locacoes/${id}`);
@@ -295,23 +311,23 @@ export const Agenda: React.FC = () => {
             <CalendarIcon className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Agenda de Loca&ccedil;&otilde;es</h2>
-            <p className="text-sm font-medium text-slate-500">Gerenciamento diario de equipamentos e compromissos</p>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">{acessoRestrito ? 'Minha Agenda' : 'Agenda de Loca&ccedil;&otilde;es'}</h2>
+            <p className="text-sm font-medium text-slate-500">{acessoRestrito ? 'Visualização dos agendamentos em que você está relacionado(a)' : 'Gerenciamento diario de equipamentos e compromissos'}</p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        {!acessoRestrito && <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={enviarParaExcel} leftIcon={<FileSpreadsheet className="w-4 h-4" />}>
             Enviar para Excel
           </Button>
           <Button onClick={() => handleOpenCreate()} leftIcon={<Plus className="w-4 h-4" />}>
             Novo Agendamento
           </Button>
-        </div>
+        </div>}
       </div>
 
       {/* Busca, filtros e periodo */}
       <div className="bg-white rounded-2xl border border-slate-100 px-6 py-5 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
+        {!acessoRestrito && <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
           <label className="xl:col-span-2 relative">
             <span className="sr-only">Pesquisa rapida</span>
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -343,11 +359,11 @@ export const Agenda: React.FC = () => {
             <option value="CANCELADA">Cancelada</option>
             <option value="NO_SHOW">Nao compareceu</option>
           </select>
-        </div>
+        </div>}
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 pt-4">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-slate-400" />
+            {!acessoRestrito && <><SlidersHorizontal className="w-4 h-4 text-slate-400" />
             <div className="inline-flex rounded-xl bg-slate-100 p-1">
               <button onClick={() => setModoVisualizacao('MES')} className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${modoVisualizacao === 'MES' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Mes</button>
               <button onClick={() => setModoVisualizacao('SEMANA')} className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${modoVisualizacao === 'SEMANA' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Semana</button>
@@ -356,7 +372,7 @@ export const Agenda: React.FC = () => {
               <button onClick={limparFiltros} className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600" title="Limpar filtros">
                 <X className="w-3.5 h-3.5" /> Limpar filtros
               </button>
-            )}
+            )}</>}
           </div>
           <span className="text-xs font-semibold text-slate-400">{locacoes.length} agendamento(s) encontrado(s)</span>
         </div>
@@ -406,13 +422,13 @@ export const Agenda: React.FC = () => {
                   >
                     {format(day, 'dd/MM (eee)', { locale: ptBR })}
                   </span>
-                  <button
+                  {!acessoRestrito && <button
                     onClick={() => handleOpenCreate(dateStr)}
                     className="text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-slate-50 transition-colors"
                     title="Novo Agendamento neste dia"
                   >
                     <Plus className="w-4 h-4" />
-                  </button>
+                  </button>}
                 </div>
 
                 <div className="flex flex-col gap-2 overflow-y-auto max-h-[240px]">
@@ -454,10 +470,22 @@ export const Agenda: React.FC = () => {
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={selectedLocacao ? 'Editar Agendamento' : 'Novo Agendamento'}
+        title={acessoRestrito ? 'Detalhes do Agendamento' : selectedLocacao ? 'Editar Agendamento' : 'Novo Agendamento'}
         maxWidth="2xl"
       >
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {acessoRestrito && selectedLocacao ? (
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4"><span className="block text-xs font-bold uppercase text-slate-400 mb-1">Clínica</span><b className="text-slate-800">{selectedLocacao.clinica?.nomeFantasia || selectedLocacao.clinica?.razaoSocial}</b></div>
+              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4"><span className="block text-xs font-bold uppercase text-slate-400 mb-1">Data e horário</span><b className="text-slate-800">{format(new Date(`${selectedLocacao.dataInicio.split('T')[0]}T12:00:00`), 'dd/MM/yyyy')} · {selectedLocacao.horaInicio || '--:--'} à {selectedLocacao.horaFim || '--:--'}</b></div>
+              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4"><span className="block text-xs font-bold uppercase text-slate-400 mb-1">Endereço</span><b className="text-slate-800">{selectedLocacao.enderecoLocacao || 'Não informado'}</b><span className="block text-slate-600 mt-1">{selectedLocacao.cidadeLocacao || selectedLocacao.clinica?.cidade || ''}</span></div>
+              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4"><span className="block text-xs font-bold uppercase text-slate-400 mb-1">Status</span><b className="text-slate-800">{selectedLocacao.status.replaceAll('_', ' ')}</b></div>
+            </div>
+            <div className="rounded-xl border border-slate-100 p-4"><span className="block text-xs font-bold uppercase text-slate-400 mb-2">Aparelho(s)</span><div className="flex flex-col gap-2">{selectedLocacao.itens.map((item) => <b key={item.id} className="text-slate-800">{item.equipamento?.descricao}</b>)}</div></div>
+            {selectedLocacao.observacoes && <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-700"><span className="block text-xs font-bold uppercase text-slate-400 mb-1">Observações</span>{selectedLocacao.observacoes}</div>}
+            <div className="flex justify-end border-t border-slate-100 pt-4"><Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Fechar</Button></div>
+          </div>
+        ) : <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Cl&iacute;nica / Cliente *</label>
@@ -667,9 +695,9 @@ export const Agenda: React.FC = () => {
               </Button>
             </div>
           </div>
-        </form>
+        </form>}
       </Modal>
-      {selectedLocacao && (
+      {!acessoRestrito && selectedLocacao && (
         <section className="print-protocol" aria-hidden="true">
           <header className="protocol-header"><img src={protocoloLogo} alt="Canetti"/><span>Rua Angelo Cisotto, 86 - Cerquilho/SP<br/>CEP 18520-000 - Cerquilho/SP<br/>Fones: (015) 3284-4278 / 3384-3630<br/>canetti.locacao@hotmail.com</span></header>
           <h1>PROTOCOLO DE ENTREGA E RETIRADA</h1>
@@ -686,4 +714,3 @@ export const Agenda: React.FC = () => {
       )}    </div>
   );
 };
-
