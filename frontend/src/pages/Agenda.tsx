@@ -444,13 +444,14 @@ export const Agenda: React.FC = () => {
                    const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nao informada';
                    const equipamentosStr = loc.itens && loc.itens.map((i) => i.equipamento?.descricao).filter(Boolean).join(', ') || 'Nenhum aparelho';
                     const valorLocacao = (loc.itens || []).reduce((total, item) => total + Number(item.valorDiaria || 0), 0);
-                    const disparos = (loc.itens || []).flatMap((item) => Object.entries(item.valoresDisparo || {})
+                    const valoresDisparo = (loc.itens || []).flatMap((item) => Object.entries(item.valoresDisparo || {})
                       .filter(([, valor]) => numeroDecimal(String(valor)) > 0)
-                      .map(([tipo, valor]) => {
-                        const quantidade = item.equipamento && disparoEhQuantidade(item.equipamento);
-                        const valorFormatado = quantidade ? `${numeroDecimal(String(valor))} un.` : `R$ ${numeroDecimal(String(valor)).toFixed(2)}`;
-                        return `${tipo}: ${valorFormatado}`;
-                      }));
+                      .map(([, valor]) => ({
+                        valor: numeroDecimal(String(valor)),
+                        quantidade: Boolean(item.equipamento && disparoEhQuantidade(item.equipamento)),
+                      })));
+                    const totalDisparosMonetarios = valoresDisparo.filter((disparo) => !disparo.quantidade).reduce((total, disparo) => total + disparo.valor, 0);
+                    const possuiDisparosPorQuantidade = valoresDisparo.some((disparo) => disparo.quantidade);
                     return (
                       <div
                         key={loc.id}
@@ -467,7 +468,8 @@ export const Agenda: React.FC = () => {
                            {equipamentosStr}
                          </div>
                          {acessoRestrito && <div className="text-[11px] font-bold text-slate-700 mt-0.5">Locação: R$ {valorLocacao.toFixed(2)}</div>}
-                         {acessoRestrito && disparos.length > 0 && <div className="text-[10px] font-medium text-slate-500 leading-snug">Disparos: {disparos.join(' · ')}</div>}
+                         {acessoRestrito && totalDisparosMonetarios > 0 && <div className="text-[10px] font-medium text-slate-500">Disparos: R$ {totalDisparosMonetarios.toFixed(2)}</div>}
+                         {acessoRestrito && totalDisparosMonetarios === 0 && possuiDisparosPorQuantidade && <div className="text-[10px] font-medium text-slate-500">Disparos registrados</div>}
                        </div>
                     );
                   })}
