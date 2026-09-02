@@ -59,7 +59,7 @@ export async function createLocacao(data: LocacaoInput, usuarioId?: number) {
       .flatMap((c) => c.itens.map((i) => i.equipamento?.descricao))
       .filter(Boolean)
       .join(', ');
-    throw new Error(`Aparalho(s) jÃ¡ locado(s) nesta data: ${nomesEquipamentos}`);
+    throw new Error(`Aparalho(s) já locado(s) nesta data: ${nomesEquipamentos}`);
   }
 
   let valorTotal = new Decimal(0);
@@ -136,6 +136,8 @@ export interface FiltrosLocacao {
   equipamentoId?: number;
   tecnicoId?: number;
   motoristaId?: number;
+  acessoColaboradorId?: number;
+  acessoColaboradorFuncao?: string | null;
 }
 
 export async function getLocacoes(filtros: FiltrosLocacao) {
@@ -166,6 +168,17 @@ export async function getLocacoes(filtros: FiltrosLocacao) {
 
   if (filtros.motoristaId && Number.isInteger(filtros.motoristaId)) {
     where.motoristaId = filtros.motoristaId;
+  }
+
+  // Contas vinculadas a colaboradores nunca podem escolher qual agenda consultar.
+  // A restrição é aplicada depois de todos os filtros recebidos do navegador.
+  if (filtros.acessoColaboradorId && filtros.acessoColaboradorFuncao === 'TECNICO') {
+    where.tecnicoId = filtros.acessoColaboradorId;
+    delete where.motoristaId;
+  }
+  if (filtros.acessoColaboradorId && filtros.acessoColaboradorFuncao === 'MOTORISTA') {
+    where.motoristaId = filtros.acessoColaboradorId;
+    delete where.tecnicoId;
   }
 
   const termoBusca = filtros.busca?.trim().slice(0, 120);
@@ -220,9 +233,13 @@ export async function getLocacoes(filtros: FiltrosLocacao) {
   });
 }
 
-export async function getLocacaoById(id: number) {
-  return await prisma.locacao.findUnique({
-    where: { id },
+export async function getLocacaoById(id: number, acesso?: { colaboradorId?: number | null; colaboradorFuncao?: string | null }) {
+  const where: any = { id };
+  if (acesso?.colaboradorId && acesso.colaboradorFuncao === 'TECNICO') where.tecnicoId = acesso.colaboradorId;
+  if (acesso?.colaboradorId && acesso.colaboradorFuncao === 'MOTORISTA') where.motoristaId = acesso.colaboradorId;
+
+  return await prisma.locacao.findFirst({
+    where,
     include: {
       clinica: true,
       tecnico: true,
@@ -239,13 +256,13 @@ export async function getLocacaoById(id: number) {
 
 export async function updateLocacao(id: number, data: Partial<LocacaoInput>) {
   const locacaoAtual = await prisma.locacao.findUnique({ where: { id }, include: { itens: true } });
-  if (!locacaoAtual) throw new Error('LocaÃ§Ã£o nÃ£o encontrada');
+  if (!locacaoAtual) throw new Error('Locação não encontrada');
 
   const dataInicioValidar = data.dataInicio || dataSomente(locacaoAtual.dataInicio);
   const dataFimValidar = data.dataFim || dataInicioValidar;
   const equipamentoIdsValidar = data.itens?.map((item) => item.equipamentoId) || locacaoAtual.itens.map((item) => item.equipamentoId);
   const conflitos = await verificarDisponibilidade(equipamentoIdsValidar, dataInicioValidar, dataFimValidar, id, data.horaInicio ?? locacaoAtual.horaInicio, data.horaFim ?? locacaoAtual.horaFim);
-  if (conflitos.length > 0) throw new Error('Existe conflito de aparelho no perÃ­odo e horÃ¡rio selecionados');
+  if (conflitos.length > 0) throw new Error('Existe conflito de aparelho no período e horário selecionados');
 
   const updateData: any = {};
   if (data.clinicaId !== undefined) updateData.clinicaId = data.clinicaId;
@@ -313,4 +330,3 @@ export async function updateLocacao(id: number, data: Partial<LocacaoInput>) {
 export async function deleteLocacao(id: number) {
   return await prisma.locacao.delete({ where: { id } });
 }
-

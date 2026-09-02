@@ -5,14 +5,20 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
 import { Search, Plus, UserCheck, Edit, Trash, Shield, Truck } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const ColaboradoresList: React.FC = () => {
+  const { usuario } = useAuth();
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'TECNICO' | 'MOTORISTA'>('TECNICO');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingColaborador, setEditingColaborador] = useState<Colaborador | null>(null);
+  const [acessoModalOpen, setAcessoModalOpen] = useState(false);
+  const [colaboradorParaAcesso, setColaboradorParaAcesso] = useState<Colaborador | null>(null);
+  const [loginAcesso, setLoginAcesso] = useState('');
+  const [senhaAcesso, setSenhaAcesso] = useState('');
 
   // Form states
   const [nome, setNome] = useState('');
@@ -86,6 +92,34 @@ export const ColaboradoresList: React.FC = () => {
         console.error(err);
         alert(err.message || 'Erro ao deletar colaborador');
       }
+    }
+  };
+
+  const sugerirLogin = (nomeColaborador: string) => nomeColaborador
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().trim().replace(/\s+/g, '.').replace(/[^a-z0-9._-]/g, '').slice(0, 30);
+
+  const handleOpenAcesso = (colaborador: Colaborador) => {
+    setColaboradorParaAcesso(colaborador);
+    setLoginAcesso(sugerirLogin(colaborador.nome));
+    setSenhaAcesso('');
+    setAcessoModalOpen(true);
+  };
+
+  const handleCriarAcesso = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!colaboradorParaAcesso) return;
+    try {
+      await api.post('/usuarios/colaborador', {
+        colaboradorId: colaboradorParaAcesso.id,
+        login: loginAcesso,
+        senha: senhaAcesso,
+      });
+      setAcessoModalOpen(false);
+      carregarDados();
+      alert(`Acesso criado para ${colaboradorParaAcesso.nome}.`);
+    } catch (err: any) {
+      alert(err.message || 'Não foi possível criar o acesso');
     }
   };
 
@@ -184,6 +218,13 @@ export const ColaboradoresList: React.FC = () => {
               <div className="border-t border-slate-100 pt-3 text-sm text-slate-600">
                 {col.telefone && <div>Telefone: <span className="font-medium text-slate-800">{col.telefone}</span></div>}
               </div>
+              {usuario?.perfil === 'ADMIN' && (
+                col.usuarioAcesso ? (
+                  <div className="rounded-xl bg-emerald-50 text-emerald-700 px-3 py-2 text-xs font-bold">Acesso ativo: {col.usuarioAcesso.login}</div>
+                ) : (
+                  <Button variant="outline" onClick={() => handleOpenAcesso(col)}>Criar acesso à agenda</Button>
+                )
+              )}
             </div>
           ))}
         </div>
@@ -241,6 +282,23 @@ export const ColaboradoresList: React.FC = () => {
             <Button type="submit">
               {editingColaborador ? 'Salvar Alterações' : 'Cadastrar'}
             </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={acessoModalOpen}
+        onClose={() => setAcessoModalOpen(false)}
+        title={`Criar acesso: ${colaboradorParaAcesso?.nome || ''}`}
+        maxWidth="md"
+      >
+        <form onSubmit={handleCriarAcesso} className="flex flex-col gap-4">
+          <p className="text-sm text-slate-600">Esta conta terá apenas visualização dos agendamentos em que {colaboradorParaAcesso?.funcao === 'MOTORISTA' ? 'o motorista' : 'a técnica'} estiver relacionado(a). Ela não poderá alterar agendamentos ou acessar os demais cadastros.</p>
+          <Input label="Login *" value={loginAcesso} onChange={(event) => setLoginAcesso(event.target.value.toLowerCase())} required placeholder="ex.: maria.silva" />
+          <Input label="Senha inicial *" type="password" value={senhaAcesso} onChange={(event) => setSenhaAcesso(event.target.value)} required minLength={8} placeholder="Mínimo de 8 caracteres" />
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-4 mt-2">
+            <Button type="button" variant="outline" onClick={() => setAcessoModalOpen(false)}>Cancelar</Button>
+            <Button type="submit">Criar acesso</Button>
           </div>
         </form>
       </Modal>

@@ -16,6 +16,11 @@ export async function index(req: Request, res: Response) {
     tecnicoId?: string;
     motoristaId?: string;
   };
+  const acessoRestrito = req.user?.perfil === 'COLABORADOR';
+  if (acessoRestrito && (!req.user?.colaboradorId || !req.user.colaboradorFuncao)) {
+    return res.json([]);
+  }
+
   const locacoes = await service.getLocacoes({
     dataInicio,
     dataFim,
@@ -25,6 +30,8 @@ export async function index(req: Request, res: Response) {
     equipamentoId: equipamentoId ? Number(equipamentoId) : undefined,
     tecnicoId: tecnicoId ? Number(tecnicoId) : undefined,
     motoristaId: motoristaId ? Number(motoristaId) : undefined,
+    acessoColaboradorId: acessoRestrito ? req.user?.colaboradorId ?? undefined : undefined,
+    acessoColaboradorFuncao: acessoRestrito ? req.user?.colaboradorFuncao : undefined,
   });
   res.json(locacoes);
 }
@@ -36,12 +43,16 @@ export async function exportarConcluidas(_req: Request, res: Response) {
 
 export async function show(req: Request, res: Response) {
   const id = Number(req.params.id);
-  const locacao = await service.getLocacaoById(id);
+  const acesso = req.user?.perfil === 'COLABORADOR'
+    ? { colaboradorId: req.user.colaboradorId ?? undefined, colaboradorFuncao: req.user.colaboradorFuncao }
+    : undefined;
+  const locacao = await service.getLocacaoById(id, acesso);
+  if (!locacao) return res.status(404).json({ error: 'Agendamento não encontrado' });
   res.json(locacao);
 }
 
 export async function create(req: Request, res: Response) {
-  if (!req.user) return res.status(401).json({ error: 'NÃ£o autenticado' });
+  if (!req.user) return res.status(401).json({ error: 'Não autenticado' });
   const data = locacaoSchema.parse(req.body);
   const locacao = await service.createLocacao(data, req.user.id);
   await registrarAuditoria({ usuarioId: req.user.id, entidade: 'LOCACAO', entidadeId: locacao.id, acao: 'CRIAR', dadosDepois: locacao, ip: ipDaRequisicao(req) });
@@ -76,7 +87,7 @@ export async function verificarDisponibilidadeController(req: Request, res: Resp
   };
 
   if (!equipamentoIds || !dataInicio || !dataFim) {
-    return res.status(400).json({ error: 'ParÃ¢metros invÃ¡lidos' });
+    return res.status(400).json({ error: 'Parâmetros inválidos' });
   }
 
   const conflitos = await service.verificarDisponibilidade(
@@ -90,4 +101,3 @@ export async function verificarDisponibilidadeController(req: Request, res: Resp
 
   res.json({ disponivel: conflitos.length === 0, conflitos });
 }
-

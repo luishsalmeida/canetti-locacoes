@@ -6,14 +6,15 @@ import { LoginInput } from '../dtos/auth';
 export async function loginService(data: LoginInput) {
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret || jwtSecret.length < 32) {
-    throw new Error('ConfiguraÃ§Ã£o de seguranÃ§a incompleta: JWT_SECRET invÃ¡lido');
+    throw new Error('Configuração de segurança incompleta: JWT_SECRET inválido');
   }
   const usuario = await prisma.usuario.findFirst({
     where: { login: data.login, ativo: true },
+    include: { colaborador: true },
   });
 
   if (!usuario) {
-    throw new Error('UsuÃ¡rio nÃ£o encontrado ou inativo');
+    throw new Error('Usuário não encontrado ou inativo');
   }
 
   const senhaValida = await bcrypt.compare(data.senha, usuario.senha);
@@ -22,7 +23,14 @@ export async function loginService(data: LoginInput) {
   }
 
   const token = jwt.sign(
-    { id: usuario.id, login: usuario.login, perfil: usuario.perfil },
+    {
+      id: usuario.id,
+      nome: usuario.nome,
+      login: usuario.login,
+      perfil: usuario.perfil,
+      colaboradorId: usuario.colaboradorId,
+      colaboradorFuncao: usuario.colaborador?.funcao || null,
+    },
     jwtSecret,
     { expiresIn: (process.env.JWT_EXPIRES_IN || '8h') as any }
   );
@@ -33,8 +41,9 @@ export async function loginService(data: LoginInput) {
       nome: usuario.nome,
       login: usuario.login,
       perfil: usuario.perfil,
+      colaboradorId: usuario.colaboradorId,
+      colaboradorFuncao: usuario.colaborador?.funcao || null,
     },
     token,
   };
 }
-

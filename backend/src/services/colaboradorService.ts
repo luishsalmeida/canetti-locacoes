@@ -21,6 +21,11 @@ export async function getColaboradores(filtros: { funcao?: string; search?: stri
   return await prisma.colaborador.findMany({
     where,
     orderBy: { nome: 'asc' },
+    include: {
+      usuarioAcesso: {
+        select: { id: true, login: true, ativo: true },
+      },
+    },
   });
 }
 
