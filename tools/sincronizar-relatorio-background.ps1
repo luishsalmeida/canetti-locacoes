@@ -46,7 +46,10 @@ try {
       Set-Content -LiteralPath $resultPath -Value $stdout
     } else {
       $details = if ($stderr) { $stderr } elseif ($stdout) { $stdout } else { 'O processo terminou sem informar detalhes.' }
-      Set-Content -LiteralPath $resultPath -Value "Falha ao sincronizar (codigo $($process.ExitCode)): $details"
+      if ($details -match 'Feche o arquivo do Excel antes de enviar os dados') {
+        $details = 'Feche o arquivo do Excel antes de enviar os dados e tente novamente.'
+      }
+      Set-Content -LiteralPath $resultPath -Value "Falha ao sincronizar: $details"
     }
   }
 } catch {
