@@ -7,10 +7,11 @@ import * as locacaoController from '../controllers/locacaoController';
 import * as colaboradorController from '../controllers/colaboradorController';
 import { loginRateLimit } from '../middleware/loginRateLimit';
 import { reportSyncAuth } from '../middleware/reportSyncAuth';
+import * as usuarioController from '../controllers/usuarioController';
 
 const router = Router();
 
-// PÃºblico
+// Público
 router.post('/auth/login', loginRateLimit, authController.login);
 router.get('/auth/me', authMiddleware, authController.me);
 
@@ -22,11 +23,12 @@ router.get('/relatorios/locacoes-concluidas', reportSyncAuth, locacaoController.
 router.use(authMiddleware);
 
 const podeConsultar = requireProfile('ADMIN', 'GERENTE', 'OPERADOR', 'CONSULTA');
+const podeVerAgenda = requireProfile('ADMIN', 'GERENTE', 'OPERADOR', 'CONSULTA', 'COLABORADOR');
 const podeOperar = requireProfile('ADMIN', 'GERENTE', 'OPERADOR');
 const podeGerenciarCadastros = requireProfile('ADMIN', 'GERENTE');
 const somenteAdmin = requireProfile('ADMIN');
 
-// ClÃ­nicas
+// Clínicas
 router.get('/clinicas', podeConsultar, clinicaController.index);
 router.get('/clinicas/:id', podeConsultar, clinicaController.show);
 router.post('/clinicas', podeGerenciarCadastros, clinicaController.create);
@@ -40,19 +42,21 @@ router.post('/equipamentos', podeGerenciarCadastros, equipamentoController.creat
 router.put('/equipamentos/:id', podeGerenciarCadastros, equipamentoController.update);
 router.delete('/equipamentos/:id', somenteAdmin, equipamentoController.remove);
 
-// Colaboradores (TÃ©cnicos e Motoristas)
+// Colaboradores (Técnicos e Motoristas)
 router.get('/colaboradores', podeConsultar, colaboradorController.listar);
 router.post('/colaboradores', podeGerenciarCadastros, colaboradorController.criar);
 router.put('/colaboradores/:id', podeGerenciarCadastros, colaboradorController.atualizar);
 router.delete('/colaboradores/:id', somenteAdmin, colaboradorController.deletar);
 
-// LocaÃ§Ãµes / Agenda
-router.get('/locacoes', podeConsultar, locacaoController.index);
-router.get('/locacoes/:id', podeConsultar, locacaoController.show);
+// Acessos individuais de técnicos e motoristas
+router.post('/usuarios/colaborador', somenteAdmin, usuarioController.criarAcessoColaborador);
+
+// Locações / Agenda
+router.get('/locacoes', podeVerAgenda, locacaoController.index);
+router.get('/locacoes/:id', podeVerAgenda, locacaoController.show);
 router.post('/locacoes', podeOperar, locacaoController.create);
 router.put('/locacoes/:id', podeOperar, locacaoController.update);
 router.delete('/locacoes/:id', somenteAdmin, locacaoController.remove);
 router.post('/locacoes/verificar-disponibilidade', podeOperar, locacaoController.verificarDisponibilidadeController);
 
 export default router;
-
