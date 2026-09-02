@@ -2,7 +2,9 @@ export interface Usuario {
   id: number;
   nome: string;
   login: string;
-  perfil: 'ADMIN' | 'GERENTE' | 'OPERADOR' | 'CONSULTA';
+  perfil: 'ADMIN' | 'GERENTE' | 'OPERADOR' | 'CONSULTA' | 'COLABORADOR';
+  colaboradorId?: number | null;
+  colaboradorFuncao?: 'TECNICO' | 'MOTORISTA' | null;
 }
 
 export interface Colaborador {
@@ -11,6 +13,11 @@ export interface Colaborador {
   funcao: 'TECNICO' | 'MOTORISTA';
   telefone?: string | null;
   ativo: boolean;
+  usuarioAcesso?: {
+    id: number;
+    login: string;
+    ativo: boolean;
+  } | null;
 }
 
 export interface Clinica {
@@ -126,4 +133,3 @@ export interface AuthResponse {
   usuario: Usuario;
   token: string;
 }
-
