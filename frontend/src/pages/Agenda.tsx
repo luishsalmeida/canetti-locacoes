@@ -420,9 +420,6 @@ export const Agenda: React.FC = () => {
                     const nomeClinica = loc.clinica ? (loc.clinica.nomeFantasia || loc.clinica.razaoSocial) : 'Clinica';
                     const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nao informada';
                     const equipamentosStr = loc.itens && loc.itens.map((i) => i.equipamento?.descricao).filter(Boolean).join(', ') || 'Nenhum aparelho';
-                    const tecnicoNome = loc.tecnico?.nome;
-                    const motoristaNome = loc.motorista?.nome;
-
                     return (
                       <div
                         key={loc.id}
@@ -438,8 +435,6 @@ export const Agenda: React.FC = () => {
                         <div className="text-[11px] font-black text-indigo-600 truncate bg-white px-2 py-1 rounded-lg border border-indigo-100/50 mt-0.5" title={equipamentosStr}>
                           {equipamentosStr}
                         </div>
-                        {tecnicoNome && <div className="text-[11px] text-slate-600 truncate">TECNICO: {tecnicoNome}</div>}
-                        {motoristaNome && <div className="text-[11px] text-slate-600 truncate">Motorista: {motoristaNome}</div>}
                       </div>
                     );
                   })}
