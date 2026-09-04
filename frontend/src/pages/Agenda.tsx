@@ -319,8 +319,8 @@ export const Agenda: React.FC = () => {
             <CalendarIcon className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">{acessoRestrito ? 'Minha Agenda' : 'Agenda de Loca&ccedil;&otilde;es'}</h2>
-            <p className="text-sm font-medium text-slate-500">{acessoRestrito ? 'Visualização dos agendamentos em que você está relacionado(a)' : 'Gerenciamento diario de equipamentos e compromissos'}</p>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">{acessoRestrito ? 'Minha Agenda' : 'Agenda de Locações'}</h2>
+            <p className="text-sm font-medium text-slate-500">{acessoRestrito ? 'Visualização dos agendamentos em que você está relacionado(a)' : 'Gerenciamento diário de equipamentos e compromissos'}</p>
           </div>
         </div>
         {!acessoRestrito && <div className="flex flex-wrap gap-2">
@@ -539,13 +539,13 @@ export const Agenda: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-                label="Hor&aacute;rio In&iacute;cio"
+                label="Horário Início"
               type="time"
               value={horaInicio}
               onChange={(e) => setHoraInicio(e.target.value)}
             />
             <Input
-                label="Hor&aacute;rio T&eacute;rmino"
+                label="Horário Término"
               type="time"
               value={horaFim}
               onChange={(e) => setHoraFim(e.target.value)}
@@ -554,7 +554,7 @@ export const Agenda: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Endere&ccedil;o da Loca&ccedil;&atilde;o (Rua, N&uacute;mero, Bairro)"
+              label="Endereço da Locação (Rua, Número, Bairro)"
               value={enderecoLocacao}
               onChange={(e) => setEnderecoLocacao(e.target.value)}
               placeholder="Rua, numero, bairro..."
