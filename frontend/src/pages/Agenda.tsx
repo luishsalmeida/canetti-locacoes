@@ -32,6 +32,7 @@ const tiposDisparoDoEquipamento = (eq: Equipamento) => eq.tiposDisparo?.length
   : TIPOS_DISPARO[(eq.descricao || '').trim().toLowerCase()] || [];
 
 const disparoEhQuantidade = (eq: Equipamento) => /liftera|sylfirm/i.test(eq.descricao || '');
+const ehLiftera2 = (eq: Equipamento) => /liftera\s*2/i.test(eq.descricao || '');
 
 const numeroDecimal = (valor: string) => {
   const numero = Number(valor.replace(',', '.'));
@@ -641,7 +642,21 @@ export const Agenda: React.FC = () => {
                             onChange={(e) => handleValorItemChange(eq.id, Number(e.target.value))}
                             required
                           />
-                          {tiposDisparoDoEquipamento(eq).map((tipo) => (
+                          {ehLiftera2(eq) ? (
+                            <div className="rounded-lg border border-indigo-200 bg-indigo-50/60 p-2.5 space-y-2">
+                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-indigo-700">Disparos realizados</p>
+                              {['Disparo Linear', 'Disparo Caneta'].map((tipo) => (
+                                <Input key={tipo}
+                                  label={`${tipo} (un.)`}
+                                  placeholder="Quantidade"
+                                  type="text"
+                                  inputMode="numeric"
+                                  required={status === 'CONCLUIDA'}
+                                  value={itemEncontrado.valoresDisparo?.[tipo] ?? ''}
+                                  onChange={(e) => handleValorDisparoChange(eq.id, tipo, e.target.value)} />
+                              ))}
+                            </div>
+                          ) : tiposDisparoDoEquipamento(eq).map((tipo) => (
                             <Input key={tipo}
                               label={`${tipo} (${disparoEhQuantidade(eq) ? 'un.' : 'R$'})`}
                               placeholder={disparoEhQuantidade(eq) ? 'Quantidade' : '0,00'}
