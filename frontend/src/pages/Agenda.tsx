@@ -63,6 +63,10 @@ export const Agenda: React.FC = () => {
   // Form states
   const [clinicaId, setClinicaId] = useState<string | number>('');
   const [dataInicio, setDataInicio] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [agendamentoEmMassa, setAgendamentoEmMassa] = useState(false);
+  const [novaDataEmMassa, setNovaDataEmMassa] = useState('');
+  const [datasEmMassa, setDatasEmMassa] = useState<string[]>([]);
+  const [salvando, setSalvando] = useState(false);
   const [horaInicio, setHoraInicio] = useState('08:00');
   const [horaFim, setHoraFim] = useState('18:00');
   const [enderecoLocacao, setEnderecoLocacao] = useState('');
@@ -156,6 +160,9 @@ export const Agenda: React.FC = () => {
     setSelectedLocacao(null);
     setClinicaId('');
     setDataInicio(dateStr || format(new Date(), 'yyyy-MM-dd'));
+    setAgendamentoEmMassa(false);
+    setNovaDataEmMassa('');
+    setDatasEmMassa([]);
     setHoraInicio('08:00');
     setHoraFim('18:00');
     setCidadeLocacao('');
@@ -176,6 +183,9 @@ export const Agenda: React.FC = () => {
     setSelectedLocacao(loc);
     setClinicaId(loc.clinicaId);
     setDataInicio(loc.dataInicio ? loc.dataInicio.split('T')[0] : format(new Date(), 'yyyy-MM-dd'));
+    setAgendamentoEmMassa(false);
+    setNovaDataEmMassa('');
+    setDatasEmMassa([]);
     setHoraInicio(loc.horaInicio || '08:00');
     setHoraFim(loc.horaFim || '18:00');
     setEnderecoLocacao(loc.enderecoLocacao || '');
@@ -221,6 +231,16 @@ export const Agenda: React.FC = () => {
     );
   };
 
+  const adicionarDataEmMassa = () => {
+    if (!novaDataEmMassa) return;
+    if (novaDataEmMassa === dataInicio || datasEmMassa.includes(novaDataEmMassa)) {
+      alert('Essa data ja foi selecionada.');
+      return;
+    }
+    setDatasEmMassa((datas) => [...datas, novaDataEmMassa].sort());
+    setNovaDataEmMassa('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (acessoRestrito) return;
@@ -233,9 +253,9 @@ export const Agenda: React.FC = () => {
       return;
     }
 
-    const payload = {
+    const criarPayload = (data: string) => ({
       clinicaId: Number(clinicaId),
-      dataInicio,
+      dataInicio: data,
       horaInicio,
       horaFim,
       enderecoLocacao,
@@ -249,22 +269,33 @@ export const Agenda: React.FC = () => {
         ),
       })),
       valorDesconto: Number(valorDesconto || 0),
-      pagamentos: valorPagamento > 0 ? [{ forma: formaPagamento, valor: Number(valorPagamento), status: statusPagamento, recebidoEm: statusPagamento === 'RECEBIDO' ? dataInicio : null }] : [],
+      pagamentos: valorPagamento > 0 ? [{ forma: formaPagamento, valor: Number(valorPagamento), status: statusPagamento, recebidoEm: statusPagamento === 'RECEBIDO' ? data : null }] : [],
       observacoes,
       status,
-    };
+    });
 
     try {
+      setSalvando(true);
       if (selectedLocacao) {
-        await api.put(`/locacoes/${selectedLocacao.id}`, payload);
+        await api.put(`/locacoes/${selectedLocacao.id}`, criarPayload(dataInicio));
       } else {
-        await api.post('/locacoes', payload);
+        const datasParaAgendar = agendamentoEmMassa
+          ? Array.from(new Set([dataInicio, ...datasEmMassa])).sort()
+          : [dataInicio];
+        let criados = 0;
+        for (const data of datasParaAgendar) {
+          await api.post('/locacoes', criarPayload(data));
+          criados++;
+        }
+        if (criados > 1) alert(`${criados} agendamentos criados com sucesso.`);
       }
       setModalOpen(false);
       carregarDados();
     } catch (err: any) {
       console.error(err);
       alert(err.message || 'Erro ao salvar agendamento');
+    } finally {
+      setSalvando(false);
     }
   };
 
@@ -537,6 +568,40 @@ export const Agenda: React.FC = () => {
             </div>
           </div>
 
+          {!selectedLocacao && <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-4 space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agendamentoEmMassa}
+                onChange={(e) => setAgendamentoEmMassa(e.target.checked)}
+                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+              />
+              <span className="text-sm font-extrabold text-indigo-800">Agendar em massa</span>
+              <span className="text-xs text-indigo-700">Use para repetir este mesmo agendamento em outras datas.</span>
+            </label>
+
+            {agendamentoEmMassa && <div className="space-y-3 border-t border-indigo-200 pt-3">
+              <p className="text-xs font-semibold text-slate-600">A data principal ja esta selecionada. Adicione abaixo todas as outras datas desejadas.</p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="date"
+                  value={novaDataEmMassa}
+                  onChange={(e) => setNovaDataEmMassa(e.target.value)}
+                  className="flex-1 px-3.5 py-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+                <Button type="button" variant="outline" onClick={adicionarDataEmMassa} leftIcon={<Plus className="w-4 h-4" />}>Adicionar data</Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[dataInicio, ...datasEmMassa].sort().map((data) => (
+                  <span key={data} className="inline-flex items-center gap-1 rounded-lg bg-white border border-indigo-200 px-2.5 py-1.5 text-xs font-bold text-indigo-700">
+                    {data.split('-').reverse().join('/')}
+                    {data !== dataInicio && <button type="button" onClick={() => setDatasEmMassa((datas) => datas.filter((item) => item !== data))} className="ml-1 text-indigo-400 hover:text-rose-600" title="Remover data"><X className="w-3.5 h-3.5" /></button>}
+                  </span>
+                ))}
+              </div>
+            </div>}
+          </div>}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
                 label="Horário Início"
@@ -725,8 +790,8 @@ export const Agenda: React.FC = () => {
                 Cancelar
               </Button>
               {selectedLocacao && <Button type="button" variant="outline" onClick={imprimirProtocolo}>Imprimir protocolo / PDF</Button>}
-              <Button type="submit">
-                {selectedLocacao ? 'Salvar Alteracoes' : 'Concluir Agendamento'}
+              <Button type="submit" disabled={salvando}>
+                {salvando ? 'Salvando...' : selectedLocacao ? 'Salvar Alteracoes' : agendamentoEmMassa ? `Criar ${datasEmMassa.length + 1} Agendamento(s)` : 'Concluir Agendamento'}
               </Button>
             </div>
           </div>
