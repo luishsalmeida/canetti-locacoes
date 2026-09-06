@@ -474,7 +474,7 @@ export const Agenda: React.FC = () => {
                   {locacoesDoDia.map((loc) => {
                     const nomeClinica = loc.clinica ? (loc.clinica.nomeFantasia || loc.clinica.razaoSocial) : 'Clinica';
                    const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nao informada';
-                   const equipamentosStr = loc.itens && loc.itens.map((i) => i.equipamento?.descricao).filter(Boolean).join(', ') || 'Nenhum aparelho';
+                   const nomesAparelhos = (loc.itens || []).map((item) => item.equipamento?.descricao).filter((descricao): descricao is string => Boolean(descricao));
                     const valorLocacao = (loc.itens || []).reduce((total, item) => total + Number(item.valorDiaria || 0), 0);
                     const valoresDisparo = (loc.itens || []).flatMap((item) => Object.entries(item.valoresDisparo || {})
                       .filter(([, valor]) => numeroDecimal(String(valor)) > 0)
@@ -496,8 +496,12 @@ export const Agenda: React.FC = () => {
                         <div className="text-[11px] font-semibold text-slate-500 truncate" title={cidadeClinica}>
                           {cidadeClinica}
                         </div>
-                         <div className="text-[11px] font-black text-indigo-600 truncate bg-white px-2 py-1 rounded-lg border border-indigo-100/50 mt-0.5" title={equipamentosStr}>
-                           {equipamentosStr}
+                         <div className="flex flex-col gap-1 mt-0.5">
+                           {nomesAparelhos.length > 0 ? nomesAparelhos.map((nome, indice) => (
+                             <span key={`${nome}-${indice}`} className="text-[11px] leading-tight font-black text-indigo-600 break-words bg-white px-2 py-1 rounded-lg border border-indigo-100/50">
+                               {nome}
+                             </span>
+                           )) : <span className="text-[11px] font-semibold text-slate-400">Nenhum aparelho</span>}
                          </div>
                          {acessoRestrito && <div className="text-[11px] font-bold text-slate-700 mt-0.5">Locação: R$ {valorLocacao.toFixed(2)}</div>}
                          {acessoRestrito && totalDisparosMonetarios > 0 && <div className="text-[10px] font-medium text-slate-500">Disparos: R$ {totalDisparosMonetarios.toFixed(2)}</div>}
