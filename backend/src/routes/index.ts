@@ -8,6 +8,7 @@ import * as colaboradorController from '../controllers/colaboradorController';
 import { loginRateLimit } from '../middleware/loginRateLimit';
 import { reportSyncAuth } from '../middleware/reportSyncAuth';
 import * as usuarioController from '../controllers/usuarioController';
+import * as veiculoController from '../controllers/veiculoController';
 
 const router = Router();
 
@@ -27,6 +28,7 @@ const podeVerAgenda = requireProfile('ADMIN', 'GERENTE', 'OPERADOR', 'CONSULTA',
 const podeOperar = requireProfile('ADMIN', 'GERENTE', 'OPERADOR');
 const podeGerenciarCadastros = requireProfile('ADMIN', 'GERENTE');
 const somenteAdmin = requireProfile('ADMIN');
+const podeUsarRotas = requireProfile('ADMIN', 'COLABORADOR');
 
 // Clínicas
 router.get('/clinicas', podeConsultar, clinicaController.index);
@@ -50,6 +52,12 @@ router.delete('/colaboradores/:id', somenteAdmin, colaboradorController.deletar)
 
 // Acessos individuais de técnicos e motoristas
 router.post('/usuarios/colaborador', somenteAdmin, usuarioController.criarAcessoColaborador);
+
+// Veículos e calculadora de rotas: cada motorista só acessa seu próprio carro.
+router.get('/rotas/meu-veiculo', podeUsarRotas, veiculoController.meuVeiculo);
+router.put('/rotas/meu-veiculo', podeUsarRotas, veiculoController.salvarMeuVeiculo);
+router.get('/rotas/veiculos/:motoristaId', somenteAdmin, veiculoController.veiculoDoMotorista);
+router.put('/rotas/veiculos/:motoristaId', somenteAdmin, veiculoController.salvarVeiculoDoMotorista);
 
 // Locações / Agenda
 router.get('/locacoes', podeVerAgenda, locacaoController.index);
