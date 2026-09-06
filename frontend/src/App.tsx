@@ -7,7 +7,8 @@ import { ClinicasList } from './pages/ClinicasList';
 import { EquipamentosList } from './pages/EquipamentosList';
 import { ColaboradoresList } from './pages/ColaboradoresList';
 import { Relatorios } from './pages/Relatorios';
-import { Calendar, Building2, Cpu, Users, BarChart3, LogOut, User, Menu, X } from 'lucide-react';
+import { CalculadoraRotas } from './pages/CalculadoraRotas';
+import { Calendar, Building2, Cpu, Users, BarChart3, LogOut, User, Menu, X, Route as RouteIcon } from 'lucide-react';
 import logoCanetti from './assets/logo-canetti.svg';
 
 const App: React.FC = () => {
@@ -15,6 +16,7 @@ const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const location = useLocation();
   const acessoRestrito = usuario?.perfil === 'COLABORADOR';
+  const motorista = usuario?.colaboradorFuncao === 'MOTORISTA';
 
   if (carregando) {
     return (
@@ -34,7 +36,8 @@ const App: React.FC = () => {
     { label: 'Aparelhos', path: '/equipamentos', icon: Cpu },
     { label: 'Colaboradores', path: '/colaboradores', icon: Users },
     { label: 'Relatórios', path: '/relatorios', icon: BarChart3 },
-  ].filter((item) => !acessoRestrito || item.path === '/');
+    { label: 'Calculadora de Rotas', path: '/rotas', icon: RouteIcon },
+  ].filter((item) => !acessoRestrito || item.path === '/' || (item.path === '/rotas' && motorista));
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col lg:flex-row">
@@ -105,6 +108,7 @@ const App: React.FC = () => {
           <Route path="/equipamentos" element={acessoRestrito ? <Navigate to="/" replace /> : <EquipamentosList />} />
           <Route path="/colaboradores" element={acessoRestrito ? <Navigate to="/" replace /> : <ColaboradoresList />} />
           <Route path="/relatorios" element={acessoRestrito ? <Navigate to="/" replace /> : <Relatorios />} />
+          <Route path="/rotas" element={!acessoRestrito || motorista ? <CalculadoraRotas /> : <Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
