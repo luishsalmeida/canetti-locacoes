@@ -474,7 +474,10 @@ export const Agenda: React.FC = () => {
                   {locacoesDoDia.map((loc) => {
                     const nomeClinica = loc.clinica ? (loc.clinica.nomeFantasia || loc.clinica.razaoSocial) : 'Clinica';
                    const cidadeClinica = loc.clinica?.cidade || loc.cidadeLocacao || 'Cidade nao informada';
-                   const nomesAparelhos = (loc.itens || []).map((item) => item.equipamento?.descricao).filter((descricao): descricao is string => Boolean(descricao));
+                   const nomesAparelhos = (loc.itens || []).map((item) => {
+                     const descricao = item.equipamento?.descricao;
+                     return descricao && /^light\s+sheer\b/i.test(descricao.trim()) ? 'Light Sheer' : descricao;
+                   }).filter((descricao): descricao is string => Boolean(descricao));
                     const valorLocacao = (loc.itens || []).reduce((total, item) => total + Number(item.valorDiaria || 0), 0);
                     const valoresDisparo = (loc.itens || []).flatMap((item) => Object.entries(item.valoresDisparo || {})
                       .filter(([, valor]) => numeroDecimal(String(valor)) > 0)
