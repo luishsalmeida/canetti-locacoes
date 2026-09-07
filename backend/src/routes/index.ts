@@ -9,6 +9,7 @@ import { loginRateLimit } from '../middleware/loginRateLimit';
 import { reportSyncAuth } from '../middleware/reportSyncAuth';
 import * as usuarioController from '../controllers/usuarioController';
 import * as veiculoController from '../controllers/veiculoController';
+import * as rotaController from '../controllers/rotaController';
 
 const router = Router();
 
@@ -58,6 +59,7 @@ router.get('/rotas/meu-veiculo', podeUsarRotas, veiculoController.meuVeiculo);
 router.put('/rotas/meu-veiculo', podeUsarRotas, veiculoController.salvarMeuVeiculo);
 router.get('/rotas/veiculos/:motoristaId', somenteAdmin, veiculoController.veiculoDoMotorista);
 router.put('/rotas/veiculos/:motoristaId', somenteAdmin, veiculoController.salvarVeiculoDoMotorista);
+router.post('/rotas/calcular-distancia', podeUsarRotas, rotaController.calcularDistancia);
 
 // Locações / Agenda
 router.get('/locacoes', podeVerAgenda, locacaoController.index);

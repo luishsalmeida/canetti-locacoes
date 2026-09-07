@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Car, CircleDollarSign, MapPin, Plus, RotateCcw, Save, Trash2 } from 'lucide-react';
+import { Car, MapPin, Navigation, Plus, Save, Trash2 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
@@ -52,6 +52,8 @@ export const CalculadoraRotas: React.FC = () => {
   const [parada, setParada] = useState('');
   const [paradas, setParadas] = useState<string[]>([]);
   const [quilometragem, setQuilometragem] = useState(0);
+  const [duracaoMinutos, setDuracaoMinutos] = useState<number | null>(null);
+  const [calculandoDistancia, setCalculandoDistancia] = useState(false);
   const [idaEVolta, setIdaEVolta] = useState(true);
   const [pedagios, setPedagios] = useState(0);
   const [estacionamento, setEstacionamento] = useState(0);
@@ -111,6 +113,20 @@ export const CalculadoraRotas: React.FC = () => {
     } finally { setSalvando(false); }
   }
 
+  async function calcularDistancia() {
+    const cidades = [origem, ...paradas, destino].map((cidade) => cidade.trim()).filter(Boolean);
+    if (cidades.length < 2) return setMensagem('Informe pelo menos a origem e o destino para calcular a rota.');
+    setCalculandoDistancia(true);
+    setMensagem('');
+    try {
+      const rota = await api.post<{ distanciaKm: number; duracaoMinutos: number }>('/rotas/calcular-distancia', { cidades });
+      setQuilometragem(rota.distanciaKm);
+      setDuracaoMinutos(rota.duracaoMinutos);
+    } catch (erro) {
+      setMensagem(erro instanceof Error ? erro.message : 'Não foi possível calcular a distância.');
+    } finally { setCalculandoDistancia(false); }
+  }
+
   const Campo = ({ label, campo, sufixo, tipo = 'number' }: { label: string; campo: keyof Veiculo; sufixo?: string; tipo?: string }) => (
     <label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">
       {label}
@@ -130,9 +146,9 @@ export const CalculadoraRotas: React.FC = () => {
         <datalist id="cidades-rota">{cidadesSugeridas.map((cidade) => <option key={cidade} value={cidade} />)}</datalist>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Origem<input list="cidades-rota" value={origem} onChange={(e) => setOrigem(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2.5" /></label><label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Destino<input list="cidades-rota" value={destino} onChange={(e) => setDestino(e.target.value)} placeholder="Ex.: Rio Claro - SP" className="rounded-xl border border-slate-300 px-3 py-2.5" /></label></div>
         <div className="flex flex-col gap-2"><span className="text-sm font-bold text-slate-600">Paradas intermediárias</span>{paradas.map((cidade, indice) => <div className="flex gap-2" key={`${cidade}-${indice}`}><input value={cidade} onChange={(e) => setParadas((itens) => itens.map((item, i) => i === indice ? e.target.value : item))} className="flex-1 rounded-xl border border-slate-300 px-3 py-2.5" /><button onClick={() => setParadas((itens) => itens.filter((_, i) => i !== indice))} className="p-2 text-rose-600"><Trash2 className="w-5 h-5" /></button></div>)}<div className="flex gap-2"><input list="cidades-rota" value={parada} onChange={(e) => setParada(e.target.value)} placeholder="Adicionar cidade" className="flex-1 rounded-xl border border-slate-300 px-3 py-2.5" /><Button type="button" variant="outline" onClick={() => { if (parada.trim()) { setParadas((itens) => [...itens, parada.trim()]); setParada(''); } }} leftIcon={<Plus className="w-4 h-4" />}>Adicionar</Button></div></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-4"><label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Quilometragem de ida<input type="number" min="0" step="0.1" value={quilometragem || ''} onChange={(e) => setQuilometragem(numero(e.target.value))} placeholder="Informe os km da rota" className="rounded-xl border border-slate-300 px-3 py-2.5" /><span className="text-xs font-medium text-slate-400">Confira a distância da rota no aplicativo de mapas.</span></label><label className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 mt-6 font-bold text-slate-700"><input type="checkbox" checked={idaEVolta} onChange={(e) => setIdaEVolta(e.target.checked)} className="w-4 h-4 accent-indigo-600" />Considerar ida e volta</label></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-4"><div className="flex flex-col gap-2"><span className="text-sm font-bold text-slate-600">Distância de ida</span><Button type="button" onClick={calcularDistancia} disabled={calculandoDistancia} leftIcon={<Navigation className="w-4 h-4" />}>{calculandoDistancia ? 'Calculando rota...' : 'Calcular distância'}</Button>{quilometragem > 0 && <span className="text-sm font-bold text-emerald-700">{quilometragem.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km {duracaoMinutos !== null && `• cerca de ${Math.floor(duracaoMinutos / 60)}h${String(duracaoMinutos % 60).padStart(2, '0')}`}</span>}<span className="text-xs font-medium text-slate-400">A quilometragem é obtida pela rota de carro entre as cidades.</span></div><label className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 mt-6 font-bold text-slate-700"><input type="checkbox" checked={idaEVolta} onChange={(e) => setIdaEVolta(e.target.checked)} className="w-4 h-4 accent-indigo-600" />Considerar ida e volta</label></div>
         <div className="grid grid-cols-2 gap-4"><label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Pedágios (R$)<input type="number" min="0" step="0.01" value={pedagios || ''} onChange={(e) => setPedagios(numero(e.target.value))} className="rounded-xl border border-slate-300 px-3 py-2.5" /></label><label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Estacionamento (R$)<input type="number" min="0" step="0.01" value={estacionamento || ''} onChange={(e) => setEstacionamento(numero(e.target.value))} className="rounded-xl border border-slate-300 px-3 py-2.5" /></label></div>
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600 flex gap-2"><MapPin className="w-4 h-4 mt-0.5 text-indigo-500" /><span><b>{origem || 'Origem'}</b>{paradas.length ? ` → ${paradas.join(' → ')}` : ''}{destino ? ` → ${destino}` : ''}</span></div>
+        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600 flex gap-2"><MapPin className="w-4 h-4 mt-0.5 text-indigo-500" /><span><b>{origem || 'Origem'}</b>{paradas.length ? ` → ${paradas.join(' → ')}` : ''}{destino ? ` → ${destino}` : ''}</span></div><p className="text-[11px] text-slate-400">Rota baseada em dados do OpenStreetMap e OSRM.</p>
       </section>
 
       <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col gap-5">
