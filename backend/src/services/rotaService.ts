@@ -1,4 +1,9 @@
 type Coordenada = { latitude: number; longitude: number; nome: string };
+type RotaGoogle = {
+  distanceMeters?: number;
+  duration?: string;
+  travelAdvisory?: { tollInfo?: { estimatedPrice?: Array<{ currencyCode?: string; units?: string; nanos?: number }> } };
+};
 
 const cacheCidades = new Map<string, Coordenada>();
 let ultimaConsultaNominatim = 0;
@@ -34,6 +39,9 @@ async function geocodificarCidade(cidade: string): Promise<Coordenada> {
 
 export async function calcularDistancia(cidades: string[]) {
   const pontos = await Promise.all(cidades.map(geocodificarCidade));
+  const rotaGoogle = await calcularRotaGoogle(pontos);
+  if (rotaGoogle) return rotaGoogle;
+
   const coordenadas = pontos.map((ponto) => `${ponto.longitude},${ponto.latitude}`).join(';');
   const resposta = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordenadas}?overview=false&steps=false`, {
     signal: AbortSignal.timeout(15000),
@@ -46,5 +54,59 @@ export async function calcularDistancia(cidades: string[]) {
     distanciaKm: Math.round(rota.distance / 100) / 10,
     duracaoMinutos: Math.round(rota.duration / 60),
     cidadesLocalizadas: pontos.map((ponto) => ponto.nome),
+    pedagiosEstimados: null,
+    pedagiosConfigurados: false,
   };
+}
+
+function pontoGoogle(ponto: Coordenada) {
+  return { location: { latLng: { latitude: ponto.latitude, longitude: ponto.longitude } } };
+}
+
+function segundosGoogle(duracao?: string) {
+  return Math.round(Number((duracao || '0s').replace('s', '')) / 60);
+}
+
+function valorPedagios(rota: RotaGoogle) {
+  const preco = rota.travelAdvisory?.tollInfo?.estimatedPrice?.find((item) => item.currencyCode === 'BRL') ?? rota.travelAdvisory?.tollInfo?.estimatedPrice?.[0];
+  if (!preco) return null;
+  return Number(preco.units || 0) + Number(preco.nanos || 0) / 1_000_000_000;
+}
+
+async function calcularRotaGoogle(pontos: Coordenada[]) {
+  const chave = process.env.GOOGLE_MAPS_API_KEY;
+  if (!chave) return null;
+
+  try {
+    const resposta = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': chave,
+        'X-Goog-FieldMask': 'routes.distanceMeters,routes.duration,routes.travelAdvisory.tollInfo',
+      },
+      body: JSON.stringify({
+        origin: pontoGoogle(pontos[0]),
+        destination: pontoGoogle(pontos[pontos.length - 1]),
+        intermediates: pontos.slice(1, -1).map(pontoGoogle),
+        travelMode: 'DRIVE',
+        extraComputations: ['TOLLS'],
+        routeModifiers: { vehicleInfo: { emissionType: 'GASOLINE' } },
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!resposta.ok) return null;
+    const dados = await resposta.json() as { routes?: RotaGoogle[] };
+    const rota = dados.routes?.[0];
+    if (!rota?.distanceMeters) return null;
+    return {
+      distanciaKm: Math.round(rota.distanceMeters / 100) / 10,
+      duracaoMinutos: segundosGoogle(rota.duration),
+      cidadesLocalizadas: pontos.map((ponto) => ponto.nome),
+      pedagiosEstimados: valorPedagios(rota),
+      pedagiosConfigurados: true,
+    };
+  } catch {
+    return null;
+  }
 }
