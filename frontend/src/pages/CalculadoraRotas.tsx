@@ -9,8 +9,15 @@ type Veiculo = {
   colaboradorId?: number;
   apelido?: string | null;
   placa?: string | null;
+  marca?: string | null;
+  modelo?: string | null;
+  anoModelo?: number | null;
   consumoKmLitro: number;
+  consumoGasolina: number;
+  consumoEtanol: number;
   precoCombustivel: number;
+  precoEtanol: number;
+  desgasteEstimadoKm: number;
   valorPneus: number;
   vidaUtilPneusKm: number;
   manutencaoAnual: number;
@@ -25,10 +32,25 @@ type Motorista = { id: number; nome: string; funcao: string };
 
 const veiculoInicial: Veiculo = {
   apelido: '', placa: '', consumoKmLitro: 10, precoCombustivel: 0,
+  marca: '', modelo: '', anoModelo: new Date().getFullYear(),
+  consumoGasolina: 11, consumoEtanol: 7.7, precoEtanol: 0, desgasteEstimadoKm: 0,
   valorPneus: 0, vidaUtilPneusKm: 40000, manutencaoAnual: 0,
   custosFixosAnuais: 0, kmAnual: 12000, valorAtual: 0,
   valorResidual: 0, vidaUtilKm: 150000,
 };
+
+type PerfilEstimado = {
+  id: string; marca: string; modelo: string; consumoGasolina: number; consumoEtanol: number; desgasteKm: number;
+};
+
+const perfisEstimados: PerfilEstimado[] = [
+  { id: 'fiat-mobi-10', marca: 'Fiat', modelo: 'Mobi 1.0', consumoGasolina: 14, consumoEtanol: 9.8, desgasteKm: 0.31 },
+  { id: 'renault-kwid-10', marca: 'Renault', modelo: 'Kwid 1.0', consumoGasolina: 14.5, consumoEtanol: 10, desgasteKm: 0.3 },
+  { id: 'vw-gol-10', marca: 'Volkswagen', modelo: 'Gol 1.0', consumoGasolina: 13.5, consumoEtanol: 9.4, desgasteKm: 0.36 },
+  { id: 'chevrolet-onix-10', marca: 'Chevrolet', modelo: 'Onix 1.0', consumoGasolina: 13.5, consumoEtanol: 9.5, desgasteKm: 0.38 },
+  { id: 'hyundai-hb20-10', marca: 'Hyundai', modelo: 'HB20 1.0', consumoGasolina: 13.4, consumoEtanol: 9.4, desgasteKm: 0.39 },
+  { id: 'toyota-corolla-20', marca: 'Toyota', modelo: 'Corolla 2.0', consumoGasolina: 11.5, consumoEtanol: 8, desgasteKm: 0.62 },
+];
 
 const cidadesSugeridas = [
   'Cerquilho - SP', 'Rio Claro - SP', 'Itapetininga - SP', 'Sorocaba - SP',
@@ -55,6 +77,7 @@ export const CalculadoraRotas: React.FC = () => {
   const [duracaoMinutos, setDuracaoMinutos] = useState<number | null>(null);
   const [calculandoDistancia, setCalculandoDistancia] = useState(false);
   const [idaEVolta, setIdaEVolta] = useState(true);
+  const [combustivelSelecionado, setCombustivelSelecionado] = useState<'GASOLINA' | 'ETANOL'>('GASOLINA');
   const [pedagios, setPedagios] = useState(0);
   const [estacionamento, setEstacionamento] = useState(0);
 
@@ -84,21 +107,36 @@ export const CalculadoraRotas: React.FC = () => {
 
   const custo = useMemo(() => {
     const kmTotal = numero(quilometragem) * (idaEVolta ? 2 : 1);
-    const litros = veiculo.consumoKmLitro > 0 ? kmTotal / numero(veiculo.consumoKmLitro) : 0;
-    const combustivel = litros * numero(veiculo.precoCombustivel);
+    const consumoSelecionado = combustivelSelecionado === 'GASOLINA' ? veiculo.consumoGasolina : veiculo.consumoEtanol;
+    const precoSelecionado = combustivelSelecionado === 'GASOLINA' ? veiculo.precoCombustivel : veiculo.precoEtanol;
+    const litros = consumoSelecionado > 0 ? kmTotal / numero(consumoSelecionado) : 0;
+    const combustivel = litros * numero(precoSelecionado);
     const pneusKm = veiculo.vidaUtilPneusKm > 0 ? numero(veiculo.valorPneus) / numero(veiculo.vidaUtilPneusKm) : 0;
     const manutencaoKm = veiculo.kmAnual > 0 ? numero(veiculo.manutencaoAnual) / numero(veiculo.kmAnual) : 0;
     const fixosKm = veiculo.kmAnual > 0 ? numero(veiculo.custosFixosAnuais) / numero(veiculo.kmAnual) : 0;
     const depreciacaoKm = veiculo.vidaUtilKm > 0 ? Math.max(0, numero(veiculo.valorAtual) - numero(veiculo.valorResidual)) / numero(veiculo.vidaUtilKm) : 0;
-    const desgastePorKm = pneusKm + manutencaoKm + fixosKm + depreciacaoKm;
+    const desgasteCalculado = pneusKm + manutencaoKm + fixosKm + depreciacaoKm;
+    const desgastePorKm = numero(veiculo.desgasteEstimadoKm) || desgasteCalculado;
     const desgaste = kmTotal * desgastePorKm;
     const extras = numero(pedagios) + numero(estacionamento);
     return { kmTotal, litros, combustivel, pneusKm, manutencaoKm, fixosKm, depreciacaoKm, desgastePorKm, desgaste, extras, total: combustivel + desgaste + extras };
-  }, [quilometragem, idaEVolta, veiculo, pedagios, estacionamento]);
+  }, [quilometragem, idaEVolta, veiculo, pedagios, estacionamento, combustivelSelecionado]);
 
   function atualizarCampo(campo: keyof Veiculo, valor: string) {
-    setVeiculo((atual) => ({ ...atual, [campo]: campo === 'apelido' || campo === 'placa' ? valor : numero(valor) }));
+    setVeiculo((atual) => ({ ...atual, [campo]: campo === 'apelido' || campo === 'placa' || campo === 'marca' || campo === 'modelo' ? valor : numero(valor) }));
   }
+
+  function selecionarPerfil(id: string) {
+    if (id === 'outro') {
+      setVeiculo((atual) => ({ ...atual, marca: '', modelo: '' }));
+      return;
+    }
+    const perfil = perfisEstimados.find((item) => item.id === id);
+    if (!perfil) return;
+    setVeiculo((atual) => ({ ...atual, marca: perfil.marca, modelo: perfil.modelo, consumoGasolina: perfil.consumoGasolina, consumoEtanol: perfil.consumoEtanol, consumoKmLitro: perfil.consumoGasolina, desgasteEstimadoKm: perfil.desgasteKm }));
+  }
+
+  const perfilSelecionado = perfisEstimados.find((perfil) => perfil.marca === veiculo.marca && perfil.modelo === veiculo.modelo)?.id ?? 'outro';
 
   async function salvarVeiculo() {
     if (administrador && !motoristaId) return setMensagem('Selecione um motorista.');
@@ -127,10 +165,10 @@ export const CalculadoraRotas: React.FC = () => {
     } finally { setCalculandoDistancia(false); }
   }
 
-  const Campo = ({ label, campo, sufixo, tipo = 'number' }: { label: string; campo: keyof Veiculo; sufixo?: string; tipo?: string }) => (
+  const Campo = ({ label, campo, sufixo, tipo = 'number', editavel = administrador }: { label: string; campo: keyof Veiculo; sufixo?: string; tipo?: string; editavel?: boolean }) => (
     <label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">
       {label}
-      <div className="relative"><input type={tipo} min={tipo === 'number' ? 0 : undefined} step={tipo === 'number' ? '0.01' : undefined} value={veiculo[campo] ?? ''} onChange={(e) => atualizarCampo(campo, e.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 pr-12 font-semibold text-slate-800 outline-none focus:border-indigo-500" />{sufixo && <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">{sufixo}</span>}</div>
+      <div className="relative"><input type={tipo} min={tipo === 'number' ? 0 : undefined} step={tipo === 'number' ? '0.01' : undefined} value={veiculo[campo] ?? ''} disabled={!editavel} onChange={(e) => atualizarCampo(campo, e.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 pr-12 font-semibold text-slate-800 outline-none focus:border-indigo-500 disabled:bg-slate-50 disabled:text-slate-500" />{sufixo && <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">{sufixo}</span>}</div>
     </label>
   );
 
@@ -152,9 +190,10 @@ export const CalculadoraRotas: React.FC = () => {
       </section>
 
       <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col gap-5">
-        <div className="flex items-center justify-between gap-3"><div><h3 className="font-black text-slate-800">Meu veículo</h3><p className="text-sm text-slate-500">Informações usadas no custo por quilômetro.</p></div><Button type="button" onClick={salvarVeiculo} disabled={salvando} leftIcon={<Save className="w-4 h-4" />}>{salvando ? 'Salvando...' : 'Salvar veículo'}</Button></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><Campo label="Nome / apelido" campo="apelido" tipo="text" /><Campo label="Placa" campo="placa" tipo="text" /><Campo label="Consumo médio" campo="consumoKmLitro" sufixo="km/l" /><Campo label="Preço da gasolina" campo="precoCombustivel" sufixo="R$/l" /></div>
-        <details className="rounded-xl border border-slate-200 p-4" open><summary className="cursor-pointer font-black text-slate-700">Desgaste do veículo</summary><p className="mt-2 text-sm text-slate-500">Preencha com médias anuais ou estimativas do seu carro. O sistema divide cada despesa pelos quilômetros previstos.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"><Campo label="Valor do jogo de pneus" campo="valorPneus" sufixo="R$" /><Campo label="Vida útil dos pneus" campo="vidaUtilPneusKm" sufixo="km" /><Campo label="Manutenção por ano" campo="manutencaoAnual" sufixo="R$" /><Campo label="IPVA, seguro e licenciamento / ano" campo="custosFixosAnuais" sufixo="R$" /><Campo label="Quilômetros por ano" campo="kmAnual" sufixo="km" /><Campo label="Valor atual do carro" campo="valorAtual" sufixo="R$" /><Campo label="Valor de revenda estimado" campo="valorResidual" sufixo="R$" /><Campo label="Vida útil planejada" campo="vidaUtilKm" sufixo="km" /></div></details>
+        <div className="flex items-center justify-between gap-3"><div><h3 className="font-black text-slate-800">Meu veículo</h3><p className="text-sm text-slate-500">Consumo e desgaste estimados pelo modelo do carro.</p></div>{administrador && <Button type="button" onClick={salvarVeiculo} disabled={salvando} leftIcon={<Save className="w-4 h-4" />}>{salvando ? 'Salvando...' : 'Salvar veículo'}</Button>}</div>
+        {administrador ? <><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Modelo do veículo<select value={perfilSelecionado} onChange={(e) => selecionarPerfil(e.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 font-semibold text-slate-800 outline-none focus:border-indigo-500">{perfisEstimados.map((perfil) => <option key={perfil.id} value={perfil.id}>{perfil.marca} {perfil.modelo}</option>)}<option value="outro">Outro modelo / preencher manualmente</option></select></label><Campo label="Ano do modelo" campo="anoModelo" sufixo="ano" /></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><Campo label="Marca" campo="marca" tipo="text" /><Campo label="Modelo" campo="modelo" tipo="text" /></div></> : <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-900"><b>{[veiculo.marca, veiculo.modelo, veiculo.anoModelo].filter(Boolean).join(' ') || 'Veículo não configurado'}</b><p className="mt-1 text-indigo-700">Os valores estimados são definidos pelo administrador.</p></div>}
+        <div className="rounded-xl border border-slate-200 p-4"><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Combustível usado na viagem<select value={combustivelSelecionado} onChange={(e) => setCombustivelSelecionado(e.target.value as 'GASOLINA' | 'ETANOL')} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 font-semibold text-slate-800 outline-none focus:border-indigo-500"><option value="GASOLINA">Gasolina</option><option value="ETANOL">Etanol</option></select></label><label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Preço atual do {combustivelSelecionado === 'GASOLINA' ? 'gasolina' : 'etanol'}<div className="relative"><input type="number" min="0" step="0.01" value={combustivelSelecionado === 'GASOLINA' ? veiculo.precoCombustivel || '' : veiculo.precoEtanol || ''} onChange={(e) => atualizarCampo(combustivelSelecionado === 'GASOLINA' ? 'precoCombustivel' : 'precoEtanol', e.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 pr-12 font-semibold text-slate-800 outline-none focus:border-indigo-500" /><span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">R$/l</span></div></label></div><p className="mt-3 text-sm font-semibold text-emerald-700">Consumo estimado: {(combustivelSelecionado === 'GASOLINA' ? veiculo.consumoGasolina : veiculo.consumoEtanol).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km/l • Desgaste estimado: {moeda(custo.desgastePorKm)}/km</p></div>
+        {administrador && <details className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer font-black text-slate-700">Ajustar estimativa do veículo</summary><p className="mt-2 text-sm text-slate-500">Os valores são uma referência. Use este painel se quiser personalizar o carro cadastrado.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"><Campo label="Consumo estimado na gasolina" campo="consumoGasolina" sufixo="km/l" /><Campo label="Consumo estimado no etanol" campo="consumoEtanol" sufixo="km/l" /><Campo label="Desgaste estimado" campo="desgasteEstimadoKm" sufixo="R$/km" /><Campo label="Placa" campo="placa" tipo="text" /><Campo label="Valor do jogo de pneus" campo="valorPneus" sufixo="R$" /><Campo label="Vida útil dos pneus" campo="vidaUtilPneusKm" sufixo="km" /><Campo label="Manutenção por ano" campo="manutencaoAnual" sufixo="R$" /><Campo label="IPVA, seguro e licenciamento / ano" campo="custosFixosAnuais" sufixo="R$" /><Campo label="Quilômetros por ano" campo="kmAnual" sufixo="km" /><Campo label="Valor atual do carro" campo="valorAtual" sufixo="R$" /><Campo label="Valor de revenda estimado" campo="valorResidual" sufixo="R$" /><Campo label="Vida útil planejada" campo="vidaUtilKm" sufixo="km" /></div></details>}
       </section>
     </div>
 

@@ -19,7 +19,10 @@ export async function meuVeiculo(req: Request, res: Response, next: NextFunction
 }
 
 export async function salvarMeuVeiculo(req: Request, res: Response, next: NextFunction) {
-  try { res.json(await veiculoService.salvarVeiculo(motoristaDaRequisicao(req), veiculoSchema.parse(req.body))); } catch (erro) { next(erro); }
+  try {
+    if (req.user?.perfil !== 'ADMIN') throw new Error('Somente o administrador pode alterar o cadastro do veículo.');
+    res.json(await veiculoService.salvarVeiculo(motoristaDaRequisicao(req), veiculoSchema.parse(req.body)));
+  } catch (erro) { next(erro); }
 }
 
 export async function veiculoDoMotorista(req: Request, res: Response, next: NextFunction) {
