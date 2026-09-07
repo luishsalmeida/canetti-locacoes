@@ -3,6 +3,7 @@ type RotaGoogle = {
   distanceMeters?: number;
   duration?: string;
   travelAdvisory?: { tollInfo?: { estimatedPrice?: Array<{ currencyCode?: string; units?: string; nanos?: number }> } };
+  legs?: Array<{ travelAdvisory?: { tollInfo?: { estimatedPrice?: Array<{ currencyCode?: string; units?: string; nanos?: number }> } } }>;
 };
 
 const cacheCidades = new Map<string, Coordenada>();
@@ -67,10 +68,20 @@ function segundosGoogle(duracao?: string) {
   return Math.round(Number((duracao || '0s').replace('s', '')) / 60);
 }
 
+function valorDaLista(precos?: Array<{ currencyCode?: string; units?: string; nanos?: number }>) {
+  const preco = precos?.find((item) => item.currencyCode === 'BRL') ?? precos?.[0];
+  return preco ? Number(preco.units || 0) + Number(preco.nanos || 0) / 1_000_000_000 : null;
+}
+
 function valorPedagios(rota: RotaGoogle) {
-  const preco = rota.travelAdvisory?.tollInfo?.estimatedPrice?.find((item) => item.currencyCode === 'BRL') ?? rota.travelAdvisory?.tollInfo?.estimatedPrice?.[0];
-  if (!preco) return null;
-  return Number(preco.units || 0) + Number(preco.nanos || 0) / 1_000_000_000;
+  const totalDaRota = valorDaLista(rota.travelAdvisory?.tollInfo?.estimatedPrice);
+  if (totalDaRota !== null) return totalDaRota;
+
+  // Em alguns trajetos, a API informa a tarifa por trecho (leg), não no total da rota.
+  const valoresPorTrecho = rota.legs
+    ?.map((trecho) => valorDaLista(trecho.travelAdvisory?.tollInfo?.estimatedPrice))
+    .filter((valor): valor is number => valor !== null) ?? [];
+  return valoresPorTrecho.length ? valoresPorTrecho.reduce((total, valor) => total + valor, 0) : null;
 }
 
 async function calcularRotaGoogle(pontos: Coordenada[]) {
@@ -83,7 +94,7 @@ async function calcularRotaGoogle(pontos: Coordenada[]) {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': chave,
-        'X-Goog-FieldMask': 'routes.distanceMeters,routes.duration,routes.travelAdvisory.tollInfo',
+        'X-Goog-FieldMask': 'routes.distanceMeters,routes.duration,routes.travelAdvisory.tollInfo,routes.legs.travelAdvisory.tollInfo',
       },
       body: JSON.stringify({
         origin: pontoGoogle(pontos[0]),
