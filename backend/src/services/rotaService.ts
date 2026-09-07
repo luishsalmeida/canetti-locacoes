@@ -1,10 +1,7 @@
+import { pracasPedagioSp, type PracaPedagio } from '../data/pedagiosSp';
+
 type Coordenada = { latitude: number; longitude: number; nome: string };
-type RotaGoogle = {
-  distanceMeters?: number;
-  duration?: string;
-  travelAdvisory?: { tollInfo?: { estimatedPrice?: Array<{ currencyCode?: string; units?: string; nanos?: number }> } };
-  legs?: Array<{ travelAdvisory?: { tollInfo?: { estimatedPrice?: Array<{ currencyCode?: string; units?: string; nanos?: number }> } } }>;
-};
+type CoordenadaRota = [longitude: number, latitude: number];
 
 const cacheCidades = new Map<string, Coordenada>();
 let ultimaConsultaNominatim = 0;
@@ -40,84 +37,44 @@ async function geocodificarCidade(cidade: string): Promise<Coordenada> {
 
 export async function calcularDistancia(cidades: string[]) {
   const pontos = await Promise.all(cidades.map(geocodificarCidade));
-  const rotaGoogle = await calcularRotaGoogle(pontos);
-  if (rotaGoogle) return rotaGoogle;
-
   const coordenadas = pontos.map((ponto) => `${ponto.longitude},${ponto.latitude}`).join(';');
-  const resposta = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordenadas}?overview=false&steps=false`, {
+  const resposta = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordenadas}?overview=full&geometries=geojson&steps=false`, {
     signal: AbortSignal.timeout(15000),
   });
   if (!resposta.ok) throw new Error('Não foi possível calcular a rota de carro agora. Tente novamente.');
-  const dados = await resposta.json() as { code?: string; routes?: Array<{ distance: number; duration: number }> };
+  const dados = await resposta.json() as { code?: string; routes?: Array<{ distance: number; duration: number; geometry?: { coordinates?: CoordenadaRota[] } }> };
   const rota = dados.routes?.[0];
   if (dados.code !== 'Ok' || !rota) throw new Error('Não foi encontrada uma rota de carro entre as cidades informadas.');
+  const pedagios = localizarPedagios(rota.geometry?.coordinates ?? []);
   return {
     distanciaKm: Math.round(rota.distance / 100) / 10,
     duracaoMinutos: Math.round(rota.duration / 60),
     cidadesLocalizadas: pontos.map((ponto) => ponto.nome),
-    pedagiosEstimados: null,
-    pedagiosConfigurados: false,
+    pedagiosEstimados: pedagios.total,
+    pedagiosConfigurados: true,
+    pedagios: pedagios.pracas.map((praca) => ({ nome: praca.nome, valor: praca.valor })),
+    pedagiosFonte: 'Base interna gratuita de praças de pedágio de SP',
   };
 }
 
-function pontoGoogle(ponto: Coordenada) {
-  return { location: { latLng: { latitude: ponto.latitude, longitude: ponto.longitude } } };
+function distanciaAoSegmentoKm(ponto: PracaPedagio, inicio: CoordenadaRota, fim: CoordenadaRota) {
+  const escalaLatitude = 111.32;
+  const escalaLongitude = 111.32 * Math.cos(((ponto.latitude + inicio[1] + fim[1]) / 3) * Math.PI / 180);
+  const ax = inicio[0] * escalaLongitude;
+  const ay = inicio[1] * escalaLatitude;
+  const bx = fim[0] * escalaLongitude;
+  const by = fim[1] * escalaLatitude;
+  const px = ponto.longitude * escalaLongitude;
+  const py = ponto.latitude * escalaLatitude;
+  const dx = bx - ax;
+  const dy = by - ay;
+  const tamanho = dx * dx + dy * dy;
+  const proporcao = tamanho === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / tamanho));
+  return Math.hypot(px - (ax + proporcao * dx), py - (ay + proporcao * dy));
 }
 
-function segundosGoogle(duracao?: string) {
-  return Math.round(Number((duracao || '0s').replace('s', '')) / 60);
-}
-
-function valorDaLista(precos?: Array<{ currencyCode?: string; units?: string; nanos?: number }>) {
-  const preco = precos?.find((item) => item.currencyCode === 'BRL') ?? precos?.[0];
-  return preco ? Number(preco.units || 0) + Number(preco.nanos || 0) / 1_000_000_000 : null;
-}
-
-function valorPedagios(rota: RotaGoogle) {
-  const totalDaRota = valorDaLista(rota.travelAdvisory?.tollInfo?.estimatedPrice);
-  if (totalDaRota !== null) return totalDaRota;
-
-  // Em alguns trajetos, a API informa a tarifa por trecho (leg), não no total da rota.
-  const valoresPorTrecho = rota.legs
-    ?.map((trecho) => valorDaLista(trecho.travelAdvisory?.tollInfo?.estimatedPrice))
-    .filter((valor): valor is number => valor !== null) ?? [];
-  return valoresPorTrecho.length ? valoresPorTrecho.reduce((total, valor) => total + valor, 0) : null;
-}
-
-async function calcularRotaGoogle(pontos: Coordenada[]) {
-  const chave = process.env.GOOGLE_MAPS_API_KEY;
-  if (!chave) return null;
-
-  try {
-    const resposta = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': chave,
-        'X-Goog-FieldMask': 'routes.distanceMeters,routes.duration,routes.travelAdvisory.tollInfo,routes.legs.travelAdvisory.tollInfo',
-      },
-      body: JSON.stringify({
-        origin: pontoGoogle(pontos[0]),
-        destination: pontoGoogle(pontos[pontos.length - 1]),
-        intermediates: pontos.slice(1, -1).map(pontoGoogle),
-        travelMode: 'DRIVE',
-        extraComputations: ['TOLLS'],
-        routeModifiers: { vehicleInfo: { emissionType: 'GASOLINE' } },
-      }),
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!resposta.ok) return null;
-    const dados = await resposta.json() as { routes?: RotaGoogle[] };
-    const rota = dados.routes?.[0];
-    if (!rota?.distanceMeters) return null;
-    return {
-      distanciaKm: Math.round(rota.distanceMeters / 100) / 10,
-      duracaoMinutos: segundosGoogle(rota.duration),
-      cidadesLocalizadas: pontos.map((ponto) => ponto.nome),
-      pedagiosEstimados: valorPedagios(rota),
-      pedagiosConfigurados: true,
-    };
-  } catch {
-    return null;
-  }
+function localizarPedagios(coordenadas: CoordenadaRota[]) {
+  // 0,9 km abrange as pistas de cada sentido sem confundir praças de estradas próximas.
+  const pracas = pracasPedagioSp.filter((praca) => coordenadas.slice(1).some((fim, indice) => distanciaAoSegmentoKm(praca, coordenadas[indice], fim) <= 0.9));
+  return { pracas, total: Math.round(pracas.reduce((total, praca) => total + praca.valor, 0) * 100) / 100 };
 }

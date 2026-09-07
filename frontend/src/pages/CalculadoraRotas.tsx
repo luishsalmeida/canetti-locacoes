@@ -6,7 +6,7 @@ import { Button } from '../components/Button';
 const DEPRECIACAO_ESTIMADA_KM = 0.35;
 const cidadesSugeridas = ['Cerquilho - SP', 'Rio Claro - SP', 'Itapetininga - SP', 'Sorocaba - SP', 'Tatuí - SP', 'Botucatu - SP', 'Bauru - SP', 'Itu - SP', 'Campinas - SP', 'Marília - SP', 'Itapeva - SP', 'Santa Cruz do Rio Pardo - SP'];
 
-type RotaCalculada = { distanciaKm: number; duracaoMinutos: number; pedagiosEstimados: number | null; pedagiosConfigurados: boolean };
+type RotaCalculada = { distanciaKm: number; duracaoMinutos: number; pedagiosEstimados: number; pedagiosConfigurados: boolean; pedagios: Array<{ nome: string; valor: number }>; pedagiosFonte?: string };
 const moeda = (valor: number) => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const numero = (valor: unknown) => Math.max(0, Number(valor) || 0);
 
@@ -24,6 +24,8 @@ export const CalculadoraRotas: React.FC = () => {
   const [precoCombustivel, setPrecoCombustivel] = useState(0);
   const [pedagioIda, setPedagioIda] = useState<number | null>(null);
   const [pedagiosConfigurados, setPedagiosConfigurados] = useState(false);
+  const [pracasPedagio, setPracasPedagio] = useState<Array<{ nome: string; valor: number }>>([]);
+  const [fontePedagios, setFontePedagios] = useState('');
   const [outrosCustos, setOutrosCustos] = useState(0);
 
   const custo = useMemo(() => {
@@ -47,7 +49,8 @@ export const CalculadoraRotas: React.FC = () => {
       setDuracaoMinutos(rota.duracaoMinutos);
       setPedagioIda(rota.pedagiosEstimados);
       setPedagiosConfigurados(rota.pedagiosConfigurados);
-      if (!rota.pedagiosConfigurados) setMensagem('A rota foi calculada. Os pedágios serão preenchidos automaticamente assim que a chave do Google Maps for configurada.');
+      setPracasPedagio(rota.pedagios);
+      setFontePedagios(rota.pedagiosFonte || '');
     } catch (erro) {
       setMensagem(erro instanceof Error ? erro.message : 'Não foi possível calcular a rota.');
     } finally { setCalculandoRota(false); }
@@ -71,7 +74,7 @@ export const CalculadoraRotas: React.FC = () => {
         <div><h3 className="font-black text-slate-800">Dados do carro</h3><p className="text-sm text-slate-500">Esses valores valem apenas para o cálculo atual.</p></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Consumo do carro<div className="relative"><input type="number" min="0.1" step="0.1" value={consumoKmLitro || ''} onChange={(e) => setConsumoKmLitro(numero(e.target.value))} className="w-full rounded-xl border border-slate-300 px-3 py-2.5 pr-12 font-semibold text-slate-800 outline-none focus:border-indigo-500" /><span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">km/l</span></div></label><label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Valor do combustível<div className="relative"><input type="number" min="0" step="0.01" value={precoCombustivel || ''} onChange={(e) => setPrecoCombustivel(numero(e.target.value))} className="w-full rounded-xl border border-slate-300 px-3 py-2.5 pr-12 font-semibold text-slate-800 outline-none focus:border-indigo-500" /><span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">R$/l</span></div></label></div>
         <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3"><div className="flex items-center gap-2 text-amber-800"><CircleDollarSign className="w-5 h-5" /><b>Depreciação estimada</b></div><p className="mt-1 text-sm text-amber-700">{moeda(DEPRECIACAO_ESTIMADA_KM)} por km, aplicada automaticamente à rota.</p></div>
-        <div className="rounded-xl border border-slate-200 p-4"><span className="text-sm font-bold text-slate-600">Pedágios automáticos</span><p className="mt-1 text-lg font-black text-slate-800">{pedagioIda === null ? (pedagiosConfigurados ? 'Sem pedágios identificados' : 'Aguardando cálculo') : moeda(custo.pedagios)}</p><p className="mt-1 text-xs text-slate-500">{pedagioIda === null && pedagiosConfigurados ? 'A rota não possui tarifa estimada.' : idaEVolta && pedagioIda !== null ? 'Valor considera ida e volta.' : 'Estimativa da rota calculada.'}</p></div>
+        <div className="rounded-xl border border-slate-200 p-4"><span className="text-sm font-bold text-slate-600">Pedágios automáticos</span><p className="mt-1 text-lg font-black text-slate-800">{pedagioIda === null ? 'Calcule a rota' : pedagioIda === 0 ? 'Sem pedágios identificados' : moeda(custo.pedagios)}</p><p className="mt-1 text-xs text-slate-500">{pedagioIda === null ? 'O valor aparece ao calcular a rota.' : idaEVolta ? 'Valor considera ida e volta.' : 'Estimativa para um sentido.'}</p>{pracasPedagio.length > 0 && <div className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-600"><p className="mb-1 font-bold">Praças consideradas:</p>{pracasPedagio.map((praca) => <div className="flex justify-between gap-3" key={praca.nome}><span>{praca.nome}</span><span className="font-semibold">{moeda(praca.valor)}</span></div>)}</div>}{fontePedagios && <p className="mt-3 text-[11px] leading-4 text-slate-400">{fontePedagios}. Tarifa de passeio estimada; confirme se a concessionária alterar o valor.</p>}</div>
         <label className="flex flex-col gap-1.5 text-sm font-bold text-slate-600">Outros custos (opcional)<div className="relative"><input type="number" min="0" step="0.01" value={outrosCustos || ''} onChange={(e) => setOutrosCustos(numero(e.target.value))} placeholder="Ex.: alimentação, lavagem" className="w-full rounded-xl border border-slate-300 px-3 py-2.5 pr-12 font-semibold text-slate-800 outline-none focus:border-indigo-500" /><span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">R$</span></div></label>
       </section>
     </div>
